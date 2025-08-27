@@ -1,0 +1,16 @@
+[project]
+name = "miluv-uwb-2"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { email = "laurence.w.liang@gmail.com" }
+]
+requires-python = ">=3.9"
+dependencies = [
+    "pandas>=2.3.2",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
