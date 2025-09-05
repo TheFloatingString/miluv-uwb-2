@@ -6,7 +6,7 @@ import numpy as np
 import argparse
 from rich import print as rprint
 from sklearn.metrics import f1_score
-
+from miluv_uwb_2.utils import is_nlos_miluv
 
 import warnings
 
@@ -55,15 +55,6 @@ ABLATIONS = [
 ]
 
 
-def is_nlos(tag_id) -> int:
-    # NLOS
-    if tag_id in [1, 3, 4]:
-        return 1
-    # LOS
-    else:
-        return 0
-
-
 def run_single_ablation(ablation, classifier_choice):
     for evals in SAME_TIME_EVALS:
         list_of_files = []
@@ -78,8 +69,8 @@ def run_single_ablation(ablation, classifier_choice):
         X_train = df_train[ablation["features"]].values
         X_test = df_test[ablation["features"]].values
 
-        y_train = df_train["to_id"].apply(is_nlos).values
-        y_test = df_test["to_id"].apply(is_nlos).values
+        y_train = df_train["to_id"].apply(is_nlos_miluv).values
+        y_test = df_test["to_id"].apply(is_nlos_miluv).values
 
         if classifier_choice == "random_forest":
             clf = RandomForestClassifier(n_estimators=100, random_state=42)
