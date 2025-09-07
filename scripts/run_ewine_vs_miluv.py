@@ -79,9 +79,9 @@ def main(
 
         # get last 1,016 columns as X_data
         if last_500_cir_cols_only:
-            X_data = ewine_df.iloc[:, -501:-1]
+            X_data = ewine_df.iloc[:, -500:]
         else:
-            X_data = ewine_df.iloc[:, -1016:-1]
+            X_data = ewine_df.iloc[:, -1016:]
         print(X_data.head())
         print(X_data.shape)
 
@@ -107,9 +107,9 @@ def main(
 
         ewine_df = pd.concat(list_of_pd_dfs)
         if last_500_cir_cols_only:
-            ewine_df = ewine_df.iloc[:, -501:-1]
+            ewine_df = ewine_df.iloc[:, -500:]
         else:
-            ewine_df = ewine_df.iloc[:, -1016:-1]
+            ewine_df = ewine_df.iloc[:, -1016:]
 
         # print(ewine_df.iloc[:,0:15].head())
         print(ewine_df.iloc[:, 15:].head())
@@ -121,7 +121,6 @@ def main(
         elif 0 < subsample < 1:
             ewine_df = ewine_df.sample(frac=subsample, random_state=42)
 
-        X_data = ewine_df.iloc[:, 15:].values
         range_dist = ewine_df.iloc[:, 1].values
         y_data = ewine_df.iloc[:, 0].values
 
@@ -145,9 +144,9 @@ def main(
 
         X_data = np.array([eval(x) for x in miluv_df["cir"].values])
         if last_500_cir_cols_only:
-            X_data = X_data[:, -501:-1]
+            X_data = X_data[:, -500:]
         else:
-            X_data = X_data[:, -1016:-1]
+            X_data = X_data[:, -1016:]
         y_data = miluv_df["to_id"].apply(is_nlos_miluv).values
 
         X_train, X_test, y_train, y_test = train_test_split(
@@ -171,9 +170,9 @@ def main(
 
         X_data = np.array([eval(x) for x in miluv_df["cir"].values])
         if last_500_cir_cols_only:
-            X_data = X_data[:, -501:-1]
+            X_data = X_data[:, -500:]
         else:
-            X_data = X_data[:, -1016:-1]
+            X_data = X_data[:, -1016:]
         y_data = miluv_df["to_id"].apply(is_nlos_miluv).values
 
         X_train, X_test, y_train, y_test = train_test_split(
@@ -199,9 +198,9 @@ def main(
 
         X_data = np.array([eval(x) for x in miluv_df["cir"].values])
         if last_500_cir_cols_only:
-            X_data = X_data[:, -501:-1]
+            X_data = X_data[:, -500:]
         else:
-            X_data = X_data[:, -1016:-1]
+            X_data = X_data[:, -1016:]
         if max_10000_rows:
             X_data = X_data[:10000]
         y_data = miluv_df["to_id"].apply(is_nlos_miluv).values
