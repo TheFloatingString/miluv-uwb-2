@@ -107,9 +107,9 @@ def main(
 
         ewine_df = pd.concat(list_of_pd_dfs)
         if last_500_cir_cols_only:
-            ewine_df = ewine_df.iloc[:, -500:]
+            X_data = ewine_df.iloc[:, -500:]
         else:
-            ewine_df = ewine_df.iloc[:, -1016:]
+            X_data = ewine_df.iloc[:, -1016:]
 
         # print(ewine_df.iloc[:,0:15].head())
         print(ewine_df.iloc[:, 15:].head())
@@ -239,6 +239,11 @@ def main(
     f1_stderr = np.std(f1_score(y_test, y_pred)) / np.sqrt(len(y_pred))
     rprint(f"F1 Score: {round(f1, 3)} +/- {round(f1_stderr, 10)}")
 
+    X_train = np.array(X_train)
+    X_test = np.array(X_test)
+    y_train = np.array(y_train)
+    y_test = np.array(y_test)
+
     wandb.log(
         {
             "accuracy": acc,
@@ -250,6 +255,10 @@ def main(
             "source_data": source_data,
             "last_500_cir_cols_only": last_500_cir_cols_only,
             "max_10000_rows": max_10000_rows,
+            "X_train_shape": X_train.shape,
+            "X_test_shape": X_test.shape,
+            "y_train_shape": y_train.shape,
+            "y_test_shape": y_test.shape,
         }
     )
     run.finish()
