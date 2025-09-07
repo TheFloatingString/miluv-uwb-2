@@ -106,6 +106,13 @@ def main(
             list_of_pd_dfs.append(curr_ewine_df)
 
         ewine_df = pd.concat(list_of_pd_dfs)
+
+        # subsample
+        if max_10000_rows:
+            ewine_df = ewine_df.sample(n=10000, random_state=42)
+        elif 0 < subsample < 1:
+            ewine_df = ewine_df.sample(frac=subsample, random_state=42)
+
         if last_500_cir_cols_only:
             X_data = ewine_df.iloc[:, -500:]
         else:
@@ -114,12 +121,6 @@ def main(
         # print(ewine_df.iloc[:,0:15].head())
         print(ewine_df.iloc[:, 15:].head())
         print(ewine_df.iloc[:, 0].head())
-
-        # subsample
-        if max_10000_rows:
-            ewine_df = ewine_df.sample(n=10000, random_state=42)
-        elif 0 < subsample < 1:
-            ewine_df = ewine_df.sample(frac=subsample, random_state=42)
 
         range_dist = ewine_df.iloc[:, 1].values
         y_data = ewine_df.iloc[:, 0].values
