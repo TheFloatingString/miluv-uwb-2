@@ -1,8 +1,11 @@
+import ast
 from typing import Literal
 import argparse
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, f1_score
+from sklearn.preprocessing import MinMaxScaler
+import tqdm
 
 from tabpfn import TabPFNClassifier
 from sklearn.ensemble import RandomForestClassifier
@@ -60,6 +63,7 @@ def main(
     subsample: float,
     last_500_cir_cols_only: bool,
     max_10000_rows: bool,
+    ablations: list[str],
 ):
     run = wandb.init(project="miluv-uwb-2", reinit=True)
 
@@ -77,11 +81,22 @@ def main(
         elif 0 < subsample < 1:
             ewine_df = ewine_df.sample(frac=subsample, random_state=42)
 
+        if "distance_scaling" in ablations:
+            x_1 = ewine_df[0].to_numpy()
+            x_2 = ewine_df[2].to_numpy()
+            y_1 = ewine_df[1].to_numpy()
+            y_2 = ewine_df[3].to_numpy()
+            dist = np.sqrt((x_2 - x_1) ** 2 + (y_2 - y_1) ** 2)
+            ewine_df.iloc[:, -1016:] *= dist[:, None] ** 2
+        elif "ranging_scaling" in ablations:
+            ewine_df.iloc[:, -1016:] *= ewine_df.iloc[:, 4].to_numpy()[:, None] ** 2
+
         # get last 1,016 columns as X_data
         if last_500_cir_cols_only:
             X_data = ewine_df.iloc[:, -500:]
         else:
             X_data = ewine_df.iloc[:, -1016:]
+
         print(X_data.head())
         print(X_data.shape)
 
@@ -89,14 +104,6 @@ def main(
         print(y_data.head())
         print(y_data.unique())
         print(y_data.value_counts())
-
-        X_train, X_test, y_train, y_test = train_test_split(
-            X_data, y_data, test_size=0.2, random_state=42
-        )
-        print(X_train.shape)
-        print(X_test.shape)
-        print(y_train.shape)
-        print(y_test.shape)
 
     elif source_data == "EWINE_NLOS_SET":
         list_of_pd_dfs = []
@@ -125,18 +132,11 @@ def main(
         range_dist = ewine_df.iloc[:, 1].values
         y_data = ewine_df.iloc[:, 0].values
 
-        X_train, X_test, y_train, y_test = train_test_split(
-            X_data, y_data, test_size=0.2, random_state=42
-        )
-        print(X_train.shape)
-        print(X_test.shape)
-        print(y_train.shape)
-        print(y_test.shape)
-
     elif source_data == "MILUV_STATIC_1_UAV":
         miluv_df = pd.read_csv(
             "data/source_data/miluv/cirObstaclesOneTag_1_static_0/ifo001/uwb_cir.csv"
         )
+        # TODO load distance column and add it as column to miluv_df
 
         if max_10000_rows:
             miluv_df = miluv_df.sample(n=10000, random_state=42)
@@ -148,16 +148,8 @@ def main(
             X_data = X_data[:, -500:]
         else:
             X_data = X_data[:, -1016:]
+        
         y_data = miluv_df["to_id"].apply(is_nlos_miluv).values
-
-        X_train, X_test, y_train, y_test = train_test_split(
-            X_data, y_data, test_size=0.2, random_state=42
-        )
-
-        print(X_train.shape)
-        print(X_test.shape)
-        print(y_train.shape)
-        print(y_test.shape)
 
     elif source_data == "MILUV_RANDOM_1_UAV":
         miluv_df = pd.read_csv(
@@ -175,10 +167,6 @@ def main(
         else:
             X_data = X_data[:, -1016:]
         y_data = miluv_df["to_id"].apply(is_nlos_miluv).values
-
-        X_train, X_test, y_train, y_test = train_test_split(
-            X_data, y_data, test_size=0.2, random_state=42
-        )
 
     elif source_data == "MILUV_RANDOM_3_UAV":
         miluv_df1 = pd.read_csv(
@@ -206,16 +194,27 @@ def main(
             X_data = X_data[:10000]
         y_data = miluv_df["to_id"].apply(is_nlos_miluv).values
 
-        X_train, X_test, y_train, y_test = train_test_split(
-            X_data, y_data, test_size=0.2, random_state=42
-        )
+    # move all X_data and y_data here
+    X_data = np.asarray(X_data)
+    y_data = np.asarray(y_data)
 
-        print(subsample)
+    # add unified preprocessing (fft, distance scaling, min-max scaling)
+    for ablation in ablations:
+        if ablation == "fft":
+            X_data = np.real(np.fft.fft(X_data, axis=1))
+        elif ablation == "min_max_scaling":
+            X_data = MinMaxScaler().fit_transform(X_data)
+        elif ablation == "distance_scaling":
+            pass
+        elif ablation == "ranging_scaling":
+            pass
+        else:
+            raise ValueError(f"Unknown ablation: {ablation}")
 
-        print(X_train.shape)
-        print(X_test.shape)
-        print(y_train.shape)
-        print(y_test.shape)
+    # train-test-split here
+    X_train, X_test, y_train, y_test = train_test_split(
+        X_data, y_data, test_size=0.2, random_state=42
+    )
 
     # clf = TabPFNClassifier(ignore_pretraining_limits=True)
     if model == "random_forest":
@@ -260,6 +259,7 @@ def main(
             "X_test_shape": X_test.shape,
             "y_train_shape": y_train.shape,
             "y_test_shape": y_test.shape,
+            "ablations": ablations,
         }
     )
     run.finish()
@@ -291,12 +291,19 @@ if __name__ == "__main__":
         "--max_10000_rows",
         action="store_true",
     )
+    parser.add_argument(
+        "--ablations",
+        type=str,
+        default="[]",
+    )
     print("added args")
     args = parser.parse_args()
+    ablations_list: list = ast.literal_eval(args.ablations)
     main(
         args.source_data,
         args.model,
         args.subsample,
         args.last_500_cir_cols_only,
         args.max_10000_rows,
+        ablations_list,
     )
