@@ -284,4 +284,10 @@ if __name__ == "__main__":
     )
     print("added args")
     args = parser.parse_args()
-    main(args.source_data, args.model, args.subsample, args.last_500_cir_cols_only)
+    main(
+        args.source_data,
+        args.model,
+        args.subsample,
+        args.last_500_cir_cols_only,
+        args.max_10000_rows,
+    )
