@@ -58,6 +58,7 @@ def main(
     source_data: SOURCE_DATA_VALUES,
     model: Literal["random_forest", "tabpfn"],
     subsample: float,
+    last_500_cir_cols_only: bool,
 ):
     run = wandb.init(project="miluv-uwb-2", reinit=True)
 
@@ -74,7 +75,10 @@ def main(
             ewine_df = ewine_df.sample(frac=subsample, random_state=42)
 
         # get last 1,016 columns as X_data
-        X_data = ewine_df.iloc[:, -501:-1]
+        if last_500_cir_cols_only:
+            X_data = ewine_df.iloc[:, -501:-1]
+        else:
+            X_data = ewine_df.iloc[:, -1016:-1]
         print(X_data.head())
         print(X_data.shape)
 
@@ -99,6 +103,10 @@ def main(
             list_of_pd_dfs.append(curr_ewine_df)
 
         ewine_df = pd.concat(list_of_pd_dfs)
+        if last_500_cir_cols_only:
+            ewine_df = ewine_df.iloc[:, -501:-1]
+        else:
+            ewine_df = ewine_df.iloc[:, -1016:-1]
 
         # print(ewine_df.iloc[:,0:15].head())
         print(ewine_df.iloc[:, 15:].head())
@@ -129,6 +137,10 @@ def main(
             miluv_df = miluv_df.sample(frac=subsample, random_state=42)
 
         X_data = np.array([eval(x) for x in miluv_df["cir"].values])
+        if last_500_cir_cols_only:
+            X_data = X_data[:, -501:-1]
+        else:
+            X_data = X_data[:, -1016:-1]
         y_data = miluv_df["to_id"].apply(is_nlos_miluv).values
 
         X_train, X_test, y_train, y_test = train_test_split(
@@ -149,6 +161,10 @@ def main(
             miluv_df = miluv_df.sample(frac=subsample, random_state=42)
 
         X_data = np.array([eval(x) for x in miluv_df["cir"].values])
+        if last_500_cir_cols_only:
+            X_data = X_data[:, -501:-1]
+        else:
+            X_data = X_data[:, -1016:-1]
         y_data = miluv_df["to_id"].apply(is_nlos_miluv).values
 
         X_train, X_test, y_train, y_test = train_test_split(
@@ -173,6 +189,10 @@ def main(
             miluv_df = miluv_df.sample(frac=subsample, random_state=42)
 
         X_data = np.array([eval(x) for x in miluv_df["cir"].values])
+        if last_500_cir_cols_only:
+            X_data = X_data[:, -501:-1]
+        else:
+            X_data = X_data[:, -1016:-1]
 
         y_data = miluv_df["to_id"].apply(is_nlos_miluv).values
 
@@ -242,6 +262,11 @@ if __name__ == "__main__":
         type=float,
         default=1,
     )
+    parser.add_argument(
+        "--last_500_cir_cols_only",
+        type=bool,
+        default=False,
+    )
     print("added args")
     args = parser.parse_args()
-    main(args.source_data, args.model, args.subsample)
+    main(args.source_data, args.model, args.subsample, args.last_500_cir_cols_only)
