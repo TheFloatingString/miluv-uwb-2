@@ -59,6 +59,7 @@ def main(
     model: Literal["random_forest", "tabpfn"],
     subsample: float,
     last_500_cir_cols_only: bool,
+    max_10000_rows: bool,
 ):
     run = wandb.init(project="miluv-uwb-2", reinit=True)
 
@@ -71,7 +72,9 @@ def main(
 
         ewine_df = pd.concat(list_of_pd_dfs)
 
-        if 0 < subsample < 1:
+        if max_10000_rows:
+            ewine_df = ewine_df.sample(n=10000, random_state=42)
+        elif 0 < subsample < 1:
             ewine_df = ewine_df.sample(frac=subsample, random_state=42)
 
         # get last 1,016 columns as X_data
@@ -113,7 +116,9 @@ def main(
         print(ewine_df.iloc[:, 0].head())
 
         # subsample
-        if 0 < subsample < 1:
+        if max_10000_rows:
+            ewine_df = ewine_df.sample(n=10000, random_state=42)
+        elif 0 < subsample < 1:
             ewine_df = ewine_df.sample(frac=subsample, random_state=42)
 
         X_data = ewine_df.iloc[:, 15:].values
@@ -133,7 +138,9 @@ def main(
             "data/source_data/miluv/cirObstaclesOneTag_1_static_0/ifo001/uwb_cir.csv"
         )
 
-        if 0 < subsample < 1:
+        if max_10000_rows:
+            miluv_df = miluv_df.sample(n=10000, random_state=42)
+        elif 0 < subsample < 1:
             miluv_df = miluv_df.sample(frac=subsample, random_state=42)
 
         X_data = np.array([eval(x) for x in miluv_df["cir"].values])
@@ -157,7 +164,9 @@ def main(
             "data/source_data/miluv/cirObstacles_1_random3_0/ifo001/uwb_cir.csv"
         )
 
-        if 0 < subsample < 1:
+        if max_10000_rows:
+            miluv_df = miluv_df.sample(n=10000, random_state=42)
+        elif 0 < subsample < 1:
             miluv_df = miluv_df.sample(frac=subsample, random_state=42)
 
         X_data = np.array([eval(x) for x in miluv_df["cir"].values])
@@ -193,7 +202,8 @@ def main(
             X_data = X_data[:, -501:-1]
         else:
             X_data = X_data[:, -1016:-1]
-
+        if max_10000_rows:
+            X_data = X_data[:10000]
         y_data = miluv_df["to_id"].apply(is_nlos_miluv).values
 
         X_train, X_test, y_train, y_test = train_test_split(
@@ -239,6 +249,8 @@ def main(
             "model": model,
             "subsample": subsample,
             "source_data": source_data,
+            "last_500_cir_cols_only": last_500_cir_cols_only,
+            "max_10000_rows": max_10000_rows,
         }
     )
     run.finish()
@@ -264,8 +276,11 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--last_500_cir_cols_only",
-        type=bool,
-        default=False,
+        action="store_true",
+    )
+    parser.add_argument(
+        "--max_10000_rows",
+        action="store_true",
     )
     print("added args")
     args = parser.parse_args()
