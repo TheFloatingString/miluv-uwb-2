@@ -12,10 +12,15 @@
 1. NLOS on passive UWB
 2. Obstacle identification using passive UWB
 
+## Refactoring
+
+1. Add f1-score in addition to accuracy
+2. Output in tabular format (i.e. csv) that can easily be converted to LaTeX tables
+
 ## 1. EWINE vs MILUV using standard preprocessing
 
 ```bash
-uv run scripts/run_ewine_vs_miluv.py --model random_forest
+uv run scripts/run_ewine_vs_miluv.py --model random_forest --dataset "<name of dataset>"
 ```
 
 ## 2. EWINE vs MILUV using CIR distance scaling
