@@ -15,7 +15,7 @@ from rich import print as rprint
 
 import wandb
 
-from miluv_uwb_2.utils import is_nlos_miluv
+from miluv_uwb_2.utils import is_nlos_miluv, get_gt_dist_drone_to_anchor
 
 np.random.seed(42)
 
@@ -133,35 +133,95 @@ def main(
         y_data = ewine_df.iloc[:, 0].values
 
     elif source_data == "MILUV_STATIC_1_UAV":
-        miluv_df = pd.read_csv(
+        miluv_cir_df = pd.read_csv(
             "data/source_data/miluv/cirObstaclesOneTag_1_static_0/ifo001/uwb_cir.csv"
         )
         # TODO load distance column and add it as column to miluv_df
+        miluv_range_df = pd.read_csv(
+            "data/source_data/miluv/cirObstaclesOneTag_1_static_0/ifo001/uwb_range.csv"
+        )
+        miluv_mocap_df = pd.read_csv(
+            "data/source_data/miluv/cirObstaclesOneTag_1_static_0/ifo001/mocap.csv"
+        )
+        miluv_cir_and_mocap_df = get_gt_dist_drone_to_anchor(
+            miluv_cir_df, miluv_mocap_df
+        )
+        miluv_df = pd.merge_asof(
+            miluv_cir_and_mocap_df,
+            miluv_range_df[["range", "gt_range", "timestamp", "from_id", "to_id"]],
+            on="timestamp",
+            direction="nearest",
+            by=["from_id", "to_id"],
+        ).dropna()
+        # miluv_df["gt_distance"] = miluv_range_df["distance"]
+        print(miluv_df.head())
 
         if max_10000_rows:
             miluv_df = miluv_df.sample(n=10000, random_state=42)
         elif 0 < subsample < 1:
             miluv_df = miluv_df.sample(frac=subsample, random_state=42)
 
-        X_data = np.array([eval(x) for x in miluv_df["cir"].values])
+        X_data = np.array([eval(x) for x in miluv_df["cir"].values]).astype(np.float64)
+
+        print(X_data[0])
+        print(X_data[1])
+        print("-" * 10)
+
+        if "distance_scaling" in ablations:
+            print("Applying distance scaling")
+            X_data *= miluv_df["gt_range"].values[:, None] ** 2
+        elif "ranging_scaling" in ablations:
+            X_data *= miluv_df["range"].values[:, None] ** 2
+        elif "mocap_scaling" in ablations:
+            X_data *= miluv_df["gt_distance_mocap"].values[:, None] ** 2
+
+        print(X_data[0])
+        print(X_data[1])
+        print("-" * 10)
+
         if last_500_cir_cols_only:
             X_data = X_data[:, -500:]
         else:
             X_data = X_data[:, -1016:]
-        
+
         y_data = miluv_df["to_id"].apply(is_nlos_miluv).values
 
     elif source_data == "MILUV_RANDOM_1_UAV":
-        miluv_df = pd.read_csv(
+        miluv_cir_df = pd.read_csv(
             "data/source_data/miluv/cirObstacles_1_random3_0/ifo001/uwb_cir.csv"
         )
+        miluv_range_df = pd.read_csv(
+            "data/source_data/miluv/cirObstacles_1_random3_0/ifo001/uwb_range.csv"
+        )
+        miluv_mocap_df = pd.read_csv(
+            "data/source_data/miluv/cirObstacles_1_random3_0/ifo001/mocap.csv"
+        )
+        miluv_cir_and_mocap_df = get_gt_dist_drone_to_anchor(
+            miluv_cir_df, miluv_mocap_df
+        )
+
+        miluv_df = pd.merge_asof(
+            miluv_cir_and_mocap_df,
+            miluv_range_df[["range", "gt_range", "timestamp", "from_id", "to_id"]],
+            on="timestamp",
+            direction="nearest",
+            by=["from_id", "to_id"],
+        ).dropna()
 
         if max_10000_rows:
             miluv_df = miluv_df.sample(n=10000, random_state=42)
         elif 0 < subsample < 1:
             miluv_df = miluv_df.sample(frac=subsample, random_state=42)
 
-        X_data = np.array([eval(x) for x in miluv_df["cir"].values])
+        X_data = np.array([eval(x) for x in miluv_df["cir"].values]).astype(np.float64)
+
+        if "distance_scaling" in ablations:
+            X_data *= miluv_df["gt_range"].values[:, None] ** 2
+        elif "ranging_scaling" in ablations:
+            X_data *= miluv_df["range"].values[:, None] ** 2
+        elif "mocap_scaling" in ablations:
+            X_data *= miluv_df["gt_distance_mocap"].values[:, None] ** 2
+
         if last_500_cir_cols_only:
             X_data = X_data[:, -500:]
         else:
@@ -169,29 +229,115 @@ def main(
         y_data = miluv_df["to_id"].apply(is_nlos_miluv).values
 
     elif source_data == "MILUV_RANDOM_3_UAV":
-        miluv_df1 = pd.read_csv(
+        miluv_cir_df1 = pd.read_csv(
             "data/source_data/miluv/cirObstacles_3_random_0/ifo001/uwb_cir.csv"
         )
-        miluv_df2 = pd.read_csv(
+        miluv_range_df1 = pd.read_csv(
+            "data/source_data/miluv/cirObstacles_3_random_0/ifo001/uwb_range.csv"
+        )
+        miluv_mocap_df1 = pd.read_csv(
+            "data/source_data/miluv/cirObstacles_3_random_0/ifo001/mocap.csv"
+        )
+        miluv_cir_and_mocap_df1 = get_gt_dist_drone_to_anchor(
+            miluv_cir_df1, miluv_mocap_df1
+        )
+        miluv_df1 = pd.merge_asof(
+            miluv_cir_and_mocap_df1,
+            miluv_range_df1[
+                [
+                    "range",
+                    "gt_range",
+                    "timestamp",
+                    "from_id",
+                    "to_id",
+                ]
+            ],
+            on="timestamp",
+            direction="nearest",
+            by=["from_id", "to_id"],
+        ).dropna()
+
+        miluv_cir_df2 = pd.read_csv(
             "data/source_data/miluv/cirObstacles_3_random_0/ifo002/uwb_cir.csv"
         )
-        miluv_df3 = pd.read_csv(
+        miluv_range_df2 = pd.read_csv(
+            "data/source_data/miluv/cirObstacles_3_random_0/ifo002/uwb_range.csv"
+        )
+        miluv_mocap_df2 = pd.read_csv(
+            "data/source_data/miluv/cirObstacles_3_random_0/ifo002/mocap.csv"
+        )
+        miluv_cir_and_mocap_df2 = get_gt_dist_drone_to_anchor(
+            miluv_cir_df2, miluv_mocap_df2
+        )
+        miluv_df2 = pd.merge_asof(
+            miluv_cir_and_mocap_df2,
+            miluv_range_df2[
+                [
+                    "range",
+                    "gt_range",
+                    "timestamp",
+                    "from_id",
+                    "to_id",
+                ]
+            ],
+            on="timestamp",
+            direction="nearest",
+            by=["from_id", "to_id"],
+        ).dropna()
+
+        miluv_cir_df3 = pd.read_csv(
             "data/source_data/miluv/cirObstacles_3_random_0/ifo003/uwb_cir.csv"
         )
+        miluv_range_df3 = pd.read_csv(
+            "data/source_data/miluv/cirObstacles_3_random_0/ifo003/uwb_range.csv"
+        )
+        miluv_mocap_df3 = pd.read_csv(
+            "data/source_data/miluv/cirObstacles_3_random_0/ifo003/mocap.csv"
+        )
+        miluv_cir_and_mocap_df3 = get_gt_dist_drone_to_anchor(
+            miluv_cir_df3, miluv_mocap_df3
+        )
+        miluv_df3 = pd.merge_asof(
+            miluv_cir_and_mocap_df3,
+            miluv_range_df3[
+                [
+                    "range",
+                    "gt_range",
+                    "timestamp",
+                    "from_id",
+                    "to_id",
+                ]
+            ],
+            on="timestamp",
+            direction="nearest",
+            by=["from_id", "to_id"],
+        ).dropna()
+
+        # miluv_df = miluv_df1
+
         miluv_df = pd.concat([miluv_df1, miluv_df2, miluv_df3])
         # drop rows in miluv_df where to_id is larger than 6
         # miluv_df = miluv_df[miluv_df["to_id"] <= 6]
         print(miluv_df.head())
-        if 0 < subsample < 1:
+
+        if max_10000_rows:
+            miluv_df = miluv_df.sample(n=10000, random_state=42)
+        elif 0 < subsample < 1:
             miluv_df = miluv_df.sample(frac=subsample, random_state=42)
 
-        X_data = np.array([eval(x) for x in miluv_df["cir"].values])
+        X_data = np.array([eval(x) for x in miluv_df["cir"].values]).astype(np.float64)
+        if "distance_scaling" in ablations:
+            X_data *= miluv_df["gt_range"].values[:, None] ** 2
+        elif "ranging_scaling" in ablations:
+            X_data *= miluv_df["range"].values[:, None] ** 2
+        elif "mocap_scaling" in ablations:
+            X_data *= miluv_df["gt_distance_mocap"].values[:, None] ** 2
+
         if last_500_cir_cols_only:
             X_data = X_data[:, -500:]
         else:
             X_data = X_data[:, -1016:]
-        if max_10000_rows:
-            X_data = X_data[:10000]
+
         y_data = miluv_df["to_id"].apply(is_nlos_miluv).values
 
     # move all X_data and y_data here
@@ -207,6 +353,8 @@ def main(
         elif ablation == "distance_scaling":
             pass
         elif ablation == "ranging_scaling":
+            pass
+        elif ablation == "mocap_scaling":
             pass
         else:
             raise ValueError(f"Unknown ablation: {ablation}")
@@ -260,6 +408,9 @@ def main(
             "y_train_shape": y_train.shape,
             "y_test_shape": y_test.shape,
             "ablations": ablations,
+            "to_id_value_counts": str(miluv_df["to_id"].value_counts().to_dict())
+            if "MILUV" in source_data
+            else None,
         }
     )
     run.finish()
