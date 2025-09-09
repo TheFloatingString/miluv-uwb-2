@@ -187,7 +187,7 @@ def main(
     if model == "svc":
         clf = SVC()
         print("running svc")
-    elif model == "tabPFN":
+    elif model == "tabpfn":
         clf = TabPFNClassifier()
         print("running tabPFN")
     elif model == "random_forest":
@@ -201,13 +201,13 @@ def main(
     acc = accuracy_score(y_test, y_pred)
     # get stderr of accuracy
     acc_stderr = np.std(y_pred == y_test) / np.sqrt(len(y_pred))
-    print(f"Accuracy: {round(acc, 3)} +/- {round(acc_stderr, 3)}")
+    rprint(f"Accuracy: {round(acc, 3)} +/- {round(acc_stderr, 3)}")
 
     # implement f1_score
     f1 = f1_score(y_test, y_pred)
     # get stderr of f1
     f1_stderr = np.std(f1_score(y_test, y_pred)) / np.sqrt(len(y_pred))
-    print(f"F1 Score: {round(f1, 3)} +/- {round(f1_stderr, 10)}")
+    rprint(f"F1 Score: {round(f1, 3)} +/- {round(f1_stderr, 10)}")
     rprint(f"on case {case}")
     rprint(f"with model {model}")
     rprint(f"with subsample {subsample}")
