@@ -13,11 +13,11 @@ from rich import print as rprint
 
 np.random.seed(42)
 
-SOURCE_DATA_VALUES = ["MILUV_STATIC_1_UAV", "MILUV_RANDOM_1_UAV"]
+SOURCE_DATA_VALUES = ["MILUV_STATIC_1_UAV", "MILUV_RANDOM_1_UAV", "MILUV_RANDOM_3_UAV"]
 
 
 def main(
-    case: Literal["MILUV_STATIC_1_UAV", "MILUV_RANDOM_1_UAV"],
+    case: Literal["MILUV_STATIC_1_UAV", "MILUV_RANDOM_1_UAV", "MILUV_RANDOM_3_UAV"],
     model: Literal["svc"],
     subsample: float,
     last_500_cir_cols_only: bool,
@@ -119,6 +119,170 @@ def main(
         )
         df_range_miluv = pd.concat(
             [df_range_0, df_range_1, df_range_2, df_range_3, df_range_4, df_range_5]
+        )
+
+    elif case == "MILUV_RANDOM_3_UAV":
+        prefix = "random"
+        # ifo001
+        df_cir_0 = pd.read_csv(
+            f"data/processed_data/miluv-{prefix}_3-ifo001-uwb_cir_0.csv"
+        )
+        df_cir_1 = pd.read_csv(
+            f"data/processed_data/miluv-{prefix}_3-ifo001-uwb_cir_1.csv"
+        )
+        df_cir_2 = pd.read_csv(
+            f"data/processed_data/miluv-{prefix}_3-ifo001-uwb_cir_2.csv"
+        )
+        df_cir_3 = pd.read_csv(
+            f"data/processed_data/miluv-{prefix}_3-ifo001-uwb_cir_3.csv"
+        )
+        df_cir_4 = pd.read_csv(
+            f"data/processed_data/miluv-{prefix}_3-ifo001-uwb_cir_4.csv"
+        )
+        df_cir_5 = pd.read_csv(
+            f"data/processed_data/miluv-{prefix}_3-ifo001-uwb_cir_5.csv"
+        )
+
+        df_range_0 = pd.read_csv(
+            f"data/processed_data/miluv-{prefix}_3-ifo001-uwb_range_0.csv"
+        )
+        df_range_1 = pd.read_csv(
+            f"data/processed_data/miluv-{prefix}_3-ifo001-uwb_range_1.csv"
+        )
+        df_range_2 = pd.read_csv(
+            f"data/processed_data/miluv-{prefix}_3-ifo001-uwb_range_2.csv"
+        )
+        df_range_3 = pd.read_csv(
+            f"data/processed_data/miluv-{prefix}_3-ifo001-uwb_range_3.csv"
+        )
+        df_range_4 = pd.read_csv(
+            f"data/processed_data/miluv-{prefix}_3-ifo001-uwb_range_4.csv"
+        )
+        df_range_5 = pd.read_csv(
+            f"data/processed_data/miluv-{prefix}_3-ifo001-uwb_range_5.csv"
+        )
+
+        # ifo002
+        df_cir_0_ifo002 = pd.read_csv(
+            f"data/processed_data/miluv-{prefix}_3-ifo002-uwb_cir_0.csv"
+        )
+        df_cir_1_ifo002 = pd.read_csv(
+            f"data/processed_data/miluv-{prefix}_3-ifo002-uwb_cir_1.csv"
+        )
+        df_cir_2_ifo002 = pd.read_csv(
+            f"data/processed_data/miluv-{prefix}_3-ifo002-uwb_cir_2.csv"
+        )
+        df_cir_3_ifo002 = pd.read_csv(
+            f"data/processed_data/miluv-{prefix}_3-ifo002-uwb_cir_3.csv"
+        )
+        df_cir_4_ifo002 = pd.read_csv(
+            f"data/processed_data/miluv-{prefix}_3-ifo002-uwb_cir_4.csv"
+        )
+        df_cir_5_ifo002 = pd.read_csv(
+            f"data/processed_data/miluv-{prefix}_3-ifo002-uwb_cir_5.csv"
+        )
+
+        df_range_0_ifo002 = pd.read_csv(
+            f"data/processed_data/miluv-{prefix}_3-ifo002-uwb_range_0.csv"
+        )
+        df_range_1_ifo002 = pd.read_csv(
+            f"data/processed_data/miluv-{prefix}_3-ifo002-uwb_range_1.csv"
+        )
+        df_range_2_ifo002 = pd.read_csv(
+            f"data/processed_data/miluv-{prefix}_3-ifo002-uwb_range_2.csv"
+        )
+        df_range_3_ifo002 = pd.read_csv(
+            f"data/processed_data/miluv-{prefix}_3-ifo002-uwb_range_3.csv"
+        )
+        df_range_4_ifo002 = pd.read_csv(
+            f"data/processed_data/miluv-{prefix}_3-ifo002-uwb_range_4.csv"
+        )
+        df_range_5_ifo002 = pd.read_csv(
+            f"data/processed_data/miluv-{prefix}_3-ifo002-uwb_range_5.csv"
+        )
+
+        # ifo003
+        df_cir_0_ifo003 = pd.read_csv(
+            f"data/processed_data/miluv-{prefix}_3-ifo003-uwb_cir_0.csv"
+        )
+        df_cir_1_ifo003 = pd.read_csv(
+            f"data/processed_data/miluv-{prefix}_3-ifo003-uwb_cir_1.csv"
+        )
+        df_cir_2_ifo003 = pd.read_csv(
+            f"data/processed_data/miluv-{prefix}_3-ifo003-uwb_cir_2.csv"
+        )
+        df_cir_3_ifo003 = pd.read_csv(
+            f"data/processed_data/miluv-{prefix}_3-ifo003-uwb_cir_3.csv"
+        )
+        df_cir_4_ifo003 = pd.read_csv(
+            f"data/processed_data/miluv-{prefix}_3-ifo003-uwb_cir_4.csv"
+        )
+        df_cir_5_ifo003 = pd.read_csv(
+            f"data/processed_data/miluv-{prefix}_3-ifo003-uwb_cir_5.csv"
+        )
+
+        df_range_0_ifo003 = pd.read_csv(
+            f"data/processed_data/miluv-{prefix}_3-ifo003-uwb_range_0.csv"
+        )
+        df_range_1_ifo003 = pd.read_csv(
+            f"data/processed_data/miluv-{prefix}_3-ifo003-uwb_range_1.csv"
+        )
+        df_range_2_ifo003 = pd.read_csv(
+            f"data/processed_data/miluv-{prefix}_3-ifo003-uwb_range_2.csv"
+        )
+        df_range_3_ifo003 = pd.read_csv(
+            f"data/processed_data/miluv-{prefix}_3-ifo003-uwb_range_3.csv"
+        )
+        df_range_4_ifo003 = pd.read_csv(
+            f"data/processed_data/miluv-{prefix}_3-ifo003-uwb_range_4.csv"
+        )
+        df_range_5_ifo003 = pd.read_csv(
+            f"data/processed_data/miluv-{prefix}_3-ifo003-uwb_range_5.csv"
+        )
+
+        df_cir_miluv = pd.concat(
+            [
+                df_cir_0,
+                df_cir_1,
+                df_cir_2,
+                df_cir_3,
+                df_cir_4,
+                df_cir_5,
+                df_cir_0_ifo002,
+                df_cir_1_ifo002,
+                df_cir_2_ifo002,
+                df_cir_3_ifo002,
+                df_cir_4_ifo002,
+                df_cir_5_ifo002,
+                df_cir_0_ifo003,
+                df_cir_1_ifo003,
+                df_cir_2_ifo003,
+                df_cir_3_ifo003,
+                df_cir_4_ifo003,
+                df_cir_5_ifo003,
+            ]
+        )
+        df_range_miluv = pd.concat(
+            [
+                df_range_0,
+                df_range_1,
+                df_range_2,
+                df_range_3,
+                df_range_4,
+                df_range_5,
+                df_range_0_ifo002,
+                df_range_1_ifo002,
+                df_range_2_ifo002,
+                df_range_3_ifo002,
+                df_range_4_ifo002,
+                df_range_5_ifo002,
+                df_range_0_ifo003,
+                df_range_1_ifo003,
+                df_range_2_ifo003,
+                df_range_3_ifo003,
+                df_range_4_ifo003,
+                df_range_5_ifo003,
+            ]
         )
 
     def is_nlos_miluv(tag_id):
