@@ -4,6 +4,7 @@ import argparse
 import pandas as pd
 from sklearn.svm import SVC
 from sklearn.ensemble import RandomForestClassifier
+from tabpfn import TabPFNClassifier
 import tqdm
 import numpy as np
 from sklearn.model_selection import train_test_split
