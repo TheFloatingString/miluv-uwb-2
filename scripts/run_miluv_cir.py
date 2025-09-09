@@ -39,9 +39,23 @@ def main(
     run = wandb.init(project="miluv-uwb-2", reinit=True)
 
     if source_data == "MILUV_STATIC_1_UAV":
-        miluv_df = pd.read_csv(
+        miluv_cir_df = pd.read_csv(
             "data/source_data/miluv/cirObstaclesOneTag_1_static_0/ifo001/uwb_cir.csv"
         )
+        miluv_range_df = pd.read_csv(
+            "data/source_data/miluv/cirObstaclesOneTag_1_static_0/ifo001/uwb_range.csv"
+        )
+
+        miluv_df = pd.merge_asof(
+            miluv_cir_df,
+            miluv_range_df[["to_id", "from_id", "range", "gt_range", "timestamp"]],
+            on="timestamp",
+            direction="nearest",
+            by=["to_id", "from_id"],
+        ).dropna()
+
+        print(miluv_df.head())
+        print(miluv_df.shape)
 
         if max_10000_rows:
             miluv_df = miluv_df.sample(n=10000, random_state=42)
@@ -49,6 +63,13 @@ def main(
             miluv_df = miluv_df.sample(frac=subsample, random_state=42)
 
         X_data = np.array([eval(x) for x in miluv_df["cir"].values]).astype(np.float64)
+
+        if "distance_scaling" in ablations:
+            X_data *= miluv_df["gt_range"].to_numpy()[:, None]
+        elif "ranging_scaling" in ablations:
+            X_data *= miluv_df["range"].to_numpy()[:, None]
+        elif "mocap_scaling" in ablations:
+            raise NotImplementedError("mocap_scaling not yet implemented")
 
         if last_500_cir_cols_only:
             X_data = X_data[:, -500:]
@@ -58,9 +79,24 @@ def main(
         y_data = miluv_df["to_id"].apply(is_nlos_miluv).values
 
     elif source_data == "MILUV_RANDOM_1_UAV":
-        miluv_df = pd.read_csv(
+        miluv_cir_df = pd.read_csv(
             "data/source_data/miluv/cirObstacles_1_random3_0/ifo001/uwb_cir.csv"
         )
+
+        miluv_range_df = pd.read_csv(
+            "data/source_data/miluv/cirObstacles_1_random3_0/ifo001/uwb_range.csv"
+        )
+
+        miluv_df = pd.merge_asof(
+            miluv_cir_df,
+            miluv_range_df[["to_id", "from_id", "range", "gt_range", "timestamp"]],
+            on="timestamp",
+            direction="nearest",
+            by=["to_id", "from_id"],
+        ).dropna()
+
+        print(miluv_df.head())
+        print(miluv_df.shape)
 
         if max_10000_rows:
             miluv_df = miluv_df.sample(n=10000, random_state=42)
@@ -68,6 +104,13 @@ def main(
             miluv_df = miluv_df.sample(frac=subsample, random_state=42)
 
         X_data = np.array([eval(x) for x in miluv_df["cir"].values]).astype(np.float64)
+
+        if "distance_scaling" in ablations:
+            X_data *= miluv_df["gt_range"].to_numpy()[:, None]
+        elif "ranging_scaling" in ablations:
+            X_data *= miluv_df["range"].to_numpy()[:, None]
+        elif "mocap_scaling" in ablations:
+            raise NotImplementedError("mocap_scaling not yet implemented")
 
         if last_500_cir_cols_only:
             X_data = X_data[:, -500:]
@@ -79,14 +122,50 @@ def main(
         miluv_cir_df1 = pd.read_csv(
             "data/source_data/miluv/cirObstacles_3_random_0/ifo001/uwb_cir.csv"
         )
+        miluv_range_df1 = pd.read_csv(
+            "data/source_data/miluv/cirObstacles_3_random_0/ifo001/uwb_range.csv"
+        )
         miluv_cir_df2 = pd.read_csv(
             "data/source_data/miluv/cirObstacles_3_random_0/ifo002/uwb_cir.csv"
+        )
+        miluv_range_df2 = pd.read_csv(
+            "data/source_data/miluv/cirObstacles_3_random_0/ifo002/uwb_range.csv"
         )
         miluv_cir_df3 = pd.read_csv(
             "data/source_data/miluv/cirObstacles_3_random_0/ifo003/uwb_cir.csv"
         )
+        miluv_range_df3 = pd.read_csv(
+            "data/source_data/miluv/cirObstacles_3_random_0/ifo003/uwb_range.csv"
+        )
 
-        miluv_df = pd.concat([miluv_cir_df1, miluv_cir_df2, miluv_cir_df3])
+        miluv_df1 = pd.merge_asof(
+            miluv_cir_df1,
+            miluv_range_df1[["to_id", "from_id", "range", "gt_range", "timestamp"]],
+            on="timestamp",
+            direction="nearest",
+            by=["to_id", "from_id"],
+        )
+
+        miluv_df2 = pd.merge_asof(
+            miluv_cir_df2,
+            miluv_range_df2[["to_id", "from_id", "range", "gt_range", "timestamp"]],
+            on="timestamp",
+            direction="nearest",
+            by=["to_id", "from_id"],
+        )
+
+        miluv_df3 = pd.merge_asof(
+            miluv_cir_df3,
+            miluv_range_df3[["to_id", "from_id", "range", "gt_range", "timestamp"]],
+            on="timestamp",
+            direction="nearest",
+            by=["to_id", "from_id"],
+        )
+
+        miluv_df = pd.concat([miluv_df1, miluv_df2, miluv_df3]).dropna()
+
+        print(miluv_df.head())
+        print(miluv_df.shape)
 
         if max_10000_rows:
             miluv_df = miluv_df.sample(n=10000, random_state=42)
@@ -94,6 +173,13 @@ def main(
             miluv_df = miluv_df.sample(frac=subsample, random_state=42)
 
         X_data = np.array([eval(x) for x in miluv_df["cir"].values]).astype(np.float64)
+
+        if "distance_scaling" in ablations:
+            X_data *= miluv_df["gt_range"].to_numpy()[:, None]
+        elif "ranging_scaling" in ablations:
+            X_data *= miluv_df["range"].to_numpy()[:, None]
+        elif "mocap_scaling" in ablations:
+            raise NotImplementedError("mocap_scaling not yet implemented")
 
         if last_500_cir_cols_only:
             X_data = X_data[:, -500:]
@@ -107,6 +193,7 @@ def main(
     y_data = np.asarray(y_data)
 
     # add unified preprocessing (fft, distance scaling, min-max scaling)
+    print(f"ablations: {ablations}")
     for ablation in ablations:
         if ablation == "fft":
             X_data = np.real(np.fft.fft(X_data, axis=1))
@@ -126,13 +213,18 @@ def main(
         X_data, y_data, test_size=0.2, random_state=42
     )
 
+    rprint(f"sample X_train[0]: {X_train[0]}")
+
     # clf = TabPFNClassifier(ignore_pretraining_limits=True)
     if model == "random_forest":
         clf = RandomForestClassifier()
+        print("running random_forest")
     elif model == "tabpfn":
         clf = TabPFNClassifier()
+        print("running tabpfn")
     elif model == "svc":
         clf = SVC()
+        print("running svc")
     else:
         raise ValueError(f"Unknown model: {model}")
 

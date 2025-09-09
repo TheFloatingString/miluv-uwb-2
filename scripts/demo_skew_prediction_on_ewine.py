@@ -7,23 +7,31 @@ import numpy as np
 
 np.random.seed(42)
 
-CHOICE_OF_EWINE="2018"
+CHOICE_OF_EWINE = "2018"
 
 if CHOICE_OF_EWINE == "2016":
     df = pd.read_csv("data/source_data/ewine/2016_paper/uwb_dataset_part6.csv")
     print(df.head())
     col_for_range = df["RANGE"].values
     col_for_is_nlos = df["NLOS"].values
-    fp_amp_1 =np.sqrt(df["FP_AMP1"].values)
+    fp_amp_1 = np.sqrt(df["FP_AMP1"].values)
     fp_amp_2 = np.sqrt(df["FP_AMP2"].values)
 else:
-    df = pd.concat([pd.read_csv(f"data/source_data/ewine/2018_paper/dataset2_tag_room1_part{i}.csv", header=None) for i in range(10)])
+    df = pd.concat(
+        [
+            pd.read_csv(
+                f"data/source_data/ewine/2018_paper/dataset2_tag_room1_part{i}.csv",
+                header=None,
+            )
+            for i in range(10)
+        ]
+    )
     print(df.head())
 
-    col_for_range = df.iloc[:,4]
-    col_for_is_nlos = df.iloc[:,5]
-    fp_amp_1 = np.sqrt(df.iloc[:,11])
-    fp_amp_2 = np.sqrt(df.iloc[:,12])
+    col_for_range = df.iloc[:, 4]
+    col_for_is_nlos = df.iloc[:, 5]
+    fp_amp_1 = np.sqrt(df.iloc[:, 11])
+    fp_amp_2 = np.sqrt(df.iloc[:, 12])
 
 
 model = joblib.load("skew_prediction_model.pkl")
@@ -42,4 +50,3 @@ clf.fit(X_train, y_train)
 y_pred = clf.predict(X_test)
 
 print("Accuracy:", accuracy_score(y_test, y_pred))
-

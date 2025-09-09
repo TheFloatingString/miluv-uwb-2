@@ -1,110 +1,253 @@
+import ast
+from typing import Literal
+import argparse
 import pandas as pd
 from sklearn.svm import SVC
+from sklearn.ensemble import RandomForestClassifier
 import tqdm
 import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, f1_score
-from typing import Literal
+from rich import print as rprint
 
-# load miluv-random_1-ifo001-uwb_cir_0.
+np.random.seed(42)
 
-case: Literal["static_1", "random_1"] = "random_1"
-
-if case == "static_1":
-    prefix = "static"
-    df_cir_0 = pd.read_csv(f"data/processed_data/miluv-{prefix}_1-ifo001-uwb_cir_0.csv")
-    df_cir_1 = pd.read_csv(f"data/processed_data/miluv-{prefix}_1-ifo001-uwb_cir_1.csv")
-    df_cir_2 = pd.read_csv(f"data/processed_data/miluv-{prefix}_1-ifo001-uwb_cir_2.csv")
-    df_cir_3 = pd.read_csv(f"data/processed_data/miluv-{prefix}_1-ifo001-uwb_cir_3.csv")
-    df_cir_4 = pd.read_csv(f"data/processed_data/miluv-{prefix}_1-ifo001-uwb_cir_4.csv")
-    df_cir_5 = pd.read_csv(f"data/processed_data/miluv-{prefix}_1-ifo001-uwb_cir_5.csv")
-
-    df_range_0 = pd.read_csv(
-        f"data/processed_data/miluv-{prefix}_1-ifo001-uwb_range_0.csv"
-    )
-    df_range_1 = pd.read_csv(
-        f"data/processed_data/miluv-{prefix}_1-ifo001-uwb_range_1.csv"
-    )
-    df_range_2 = pd.read_csv(
-        f"data/processed_data/miluv-{prefix}_1-ifo001-uwb_range_2.csv"
-    )
-    df_range_3 = pd.read_csv(
-        f"data/processed_data/miluv-{prefix}_1-ifo001-uwb_range_3.csv"
-    )
-    df_range_4 = pd.read_csv(
-        f"data/processed_data/miluv-{prefix}_1-ifo001-uwb_range_4.csv"
-    )
-    df_range_5 = pd.read_csv(
-        f"data/processed_data/miluv-{prefix}_1-ifo001-uwb_range_5.csv"
-    )
-
-if case == "random_1":
-    prefix = "random"
-    df_cir_0 = pd.read_csv(f"data/processed_data/miluv-{prefix}_1-ifo001-uwb_cir_0.csv")
-    df_cir_1 = pd.read_csv(f"data/processed_data/miluv-{prefix}_1-ifo001-uwb_cir_1.csv")
-    df_cir_2 = pd.read_csv(f"data/processed_data/miluv-{prefix}_1-ifo001-uwb_cir_2.csv")
-    df_cir_3 = pd.read_csv(f"data/processed_data/miluv-{prefix}_1-ifo001-uwb_cir_3.csv")
-    df_cir_4 = pd.read_csv(f"data/processed_data/miluv-{prefix}_1-ifo001-uwb_cir_4.csv")
-    df_cir_5 = pd.read_csv(f"data/processed_data/miluv-{prefix}_1-ifo001-uwb_cir_5.csv")
-
-    df_range_0 = pd.read_csv(
-        f"data/processed_data/miluv-{prefix}_1-ifo001-uwb_range_0.csv"
-    )
-    df_range_1 = pd.read_csv(
-        f"data/processed_data/miluv-{prefix}_1-ifo001-uwb_range_1.csv"
-    )
-    df_range_2 = pd.read_csv(
-        f"data/processed_data/miluv-{prefix}_1-ifo001-uwb_range_2.csv"
-    )
-    df_range_3 = pd.read_csv(
-        f"data/processed_data/miluv-{prefix}_1-ifo001-uwb_range_3.csv"
-    )
-    df_range_4 = pd.read_csv(
-        f"data/processed_data/miluv-{prefix}_1-ifo001-uwb_range_4.csv"
-    )
-    df_range_5 = pd.read_csv(
-        f"data/processed_data/miluv-{prefix}_1-ifo001-uwb_range_5.csv"
-    )
+SOURCE_DATA_VALUES = ["MILUV_STATIC_1_UAV", "MILUV_RANDOM_1_UAV"]
 
 
-X_data = []
-y_data = []
-
-
-def is_nlos_miluv(tag_id):
-    if tag_id in [1, 3, 4]:
-        return True
-    return False
-
-
-for df_cir, df_range in zip(
-    [df_cir_0, df_cir_1, df_cir_2, df_cir_3, df_cir_4, df_cir_5],
-    [df_range_0, df_range_1, df_range_2, df_range_3, df_range_4, df_range_5],
+def main(
+    case: Literal["MILUV_STATIC_1_UAV", "MILUV_RANDOM_1_UAV"],
+    model: Literal["svc"],
+    subsample: float,
+    max_10000_rows: bool,
+    ablations: list[str],
 ):
-    for i in tqdm.trange(len(df_cir)):
-        cir = np.asarray(eval(df_cir.iloc[i]["cir"]), dtype=np.float64)
+    if case == "MILUV_STATIC_1_UAV":
+        prefix = "static"
+        df_cir_0 = pd.read_csv(
+            f"data/processed_data/miluv-{prefix}_1-ifo001-uwb_cir_0.csv"
+        )
+        df_cir_1 = pd.read_csv(
+            f"data/processed_data/miluv-{prefix}_1-ifo001-uwb_cir_1.csv"
+        )
+        df_cir_2 = pd.read_csv(
+            f"data/processed_data/miluv-{prefix}_1-ifo001-uwb_cir_2.csv"
+        )
+        df_cir_3 = pd.read_csv(
+            f"data/processed_data/miluv-{prefix}_1-ifo001-uwb_cir_3.csv"
+        )
+        df_cir_4 = pd.read_csv(
+            f"data/processed_data/miluv-{prefix}_1-ifo001-uwb_cir_4.csv"
+        )
+        df_cir_5 = pd.read_csv(
+            f"data/processed_data/miluv-{prefix}_1-ifo001-uwb_cir_5.csv"
+        )
+
+        df_range_0 = pd.read_csv(
+            f"data/processed_data/miluv-{prefix}_1-ifo001-uwb_range_0.csv"
+        )
+        df_range_1 = pd.read_csv(
+            f"data/processed_data/miluv-{prefix}_1-ifo001-uwb_range_1.csv"
+        )
+        df_range_2 = pd.read_csv(
+            f"data/processed_data/miluv-{prefix}_1-ifo001-uwb_range_2.csv"
+        )
+        df_range_3 = pd.read_csv(
+            f"data/processed_data/miluv-{prefix}_1-ifo001-uwb_range_3.csv"
+        )
+        df_range_4 = pd.read_csv(
+            f"data/processed_data/miluv-{prefix}_1-ifo001-uwb_range_4.csv"
+        )
+        df_range_5 = pd.read_csv(
+            f"data/processed_data/miluv-{prefix}_1-ifo001-uwb_range_5.csv"
+        )
+
+        df_cir_miluv = pd.concat(
+            [df_cir_0, df_cir_1, df_cir_2, df_cir_3, df_cir_4, df_cir_5]
+        )
+        # drop rows where from_id != 10
+        df_cir_miluv = df_cir_miluv[df_cir_miluv["from_id"] == 10]
+
+        df_range_miluv = pd.concat(
+            [df_range_0, df_range_1, df_range_2, df_range_3, df_range_4, df_range_5]
+        )
+
+    elif case == "MILUV_RANDOM_1_UAV":
+        prefix = "random"
+        df_cir_0 = pd.read_csv(
+            f"data/processed_data/miluv-{prefix}_1-ifo001-uwb_cir_0.csv"
+        )
+        df_cir_1 = pd.read_csv(
+            f"data/processed_data/miluv-{prefix}_1-ifo001-uwb_cir_1.csv"
+        )
+        df_cir_2 = pd.read_csv(
+            f"data/processed_data/miluv-{prefix}_1-ifo001-uwb_cir_2.csv"
+        )
+        df_cir_3 = pd.read_csv(
+            f"data/processed_data/miluv-{prefix}_1-ifo001-uwb_cir_3.csv"
+        )
+        df_cir_4 = pd.read_csv(
+            f"data/processed_data/miluv-{prefix}_1-ifo001-uwb_cir_4.csv"
+        )
+        df_cir_5 = pd.read_csv(
+            f"data/processed_data/miluv-{prefix}_1-ifo001-uwb_cir_5.csv"
+        )
+
+        df_range_0 = pd.read_csv(
+            f"data/processed_data/miluv-{prefix}_1-ifo001-uwb_range_0.csv"
+        )
+        df_range_1 = pd.read_csv(
+            f"data/processed_data/miluv-{prefix}_1-ifo001-uwb_range_1.csv"
+        )
+        df_range_2 = pd.read_csv(
+            f"data/processed_data/miluv-{prefix}_1-ifo001-uwb_range_2.csv"
+        )
+        df_range_3 = pd.read_csv(
+            f"data/processed_data/miluv-{prefix}_1-ifo001-uwb_range_3.csv"
+        )
+        df_range_4 = pd.read_csv(
+            f"data/processed_data/miluv-{prefix}_1-ifo001-uwb_range_4.csv"
+        )
+        df_range_5 = pd.read_csv(
+            f"data/processed_data/miluv-{prefix}_1-ifo001-uwb_range_5.csv"
+        )
+
+        df_cir_miluv = pd.concat(
+            [df_cir_0, df_cir_1, df_cir_2, df_cir_3, df_cir_4, df_cir_5]
+        )
+        df_range_miluv = pd.concat(
+            [df_range_0, df_range_1, df_range_2, df_range_3, df_range_4, df_range_5]
+        )
+
+    def is_nlos_miluv(tag_id):
+        if tag_id in [1, 3, 4]:
+            return True
+        return False
+
+    if max_10000_rows:
+        df_cir_miluv = df_cir_miluv.sample(n=10000, random_state=42)
+    elif 0 < subsample < 1:
+        df_cir_miluv = df_cir_miluv.sample(frac=subsample, random_state=42)
+
+    X_data = []
+    y_data = []
+
+    for i in tqdm.trange(len(df_cir_miluv)):
+        cir = np.asarray(eval(df_cir_miluv.iloc[i]["cir"]), dtype=np.float64)
         # get the closest range column value based on timestamp
-        timestamp = df_cir.iloc[i]["timestamp"]
+        timestamp = df_cir_miluv.iloc[i]["timestamp"]
         # make sure df_range from_id and to_id cols match df_cir from_id and to_id cols
 
-        df_range_curr = df_range[df_range["to_id"] == df_cir.iloc[i]["to_id"]]
+        df_range_curr = df_range_miluv[
+            df_range_miluv["to_id"] == df_cir_miluv.iloc[i]["to_id"]
+        ]
         df_range_curr = df_range_curr[
-            df_range_curr["from_id"] == df_cir.iloc[i]["from_id"]
+            df_range_curr["from_id"] == df_cir_miluv.iloc[i]["from_id"]
         ]
         range_idx = (df_range_curr["timestamp"] - timestamp).abs().idxmin()
-        range = df_range_curr.loc[range_idx, "range"]
-        X_data.append((range**2) * cir)
-        y_data.append(is_nlos_miluv(df_cir.iloc[i]["to_id"]))
+        if "ranging_scaling" in ablations:
+            range = df_range_curr.loc[range_idx, "range"]
+            X_data.append((range**2) * cir)
+        elif "distance_scaling" in ablations:
+            range = df_range_curr.loc[range_idx, "gt_range"]
+            X_data.append((range**2) * cir)
+        else:
+            X_data.append(cir)
+
+        y_data.append(is_nlos_miluv(df_cir_miluv.iloc[i]["to_id"]))
+
+    # move all X_data and y_data here
+    X_data = np.asarray(X_data)
+    y_data = np.asarray(y_data)
+
+    # add unified preprocessing (fft, distance scaling, min-max scaling)
+    print(f"ablations: {ablations}")
+    for ablation in ablations:
+        if ablation == "fft":
+            X_data = np.real(np.fft.fft(X_data, axis=1))
+        elif ablation == "min_max_scaling":
+            from sklearn.preprocessing import MinMaxScaler
+
+            X_data = MinMaxScaler().fit_transform(X_data)
+        elif ablation == "distance_scaling":
+            pass
+        elif ablation == "ranging_scaling":
+            pass
+        elif ablation == "mocap_scaling":
+            pass
+        else:
+            raise ValueError(f"Unknown ablation: {ablation}")
+
+    # train-test-split here
+    X_train, X_test, y_train, y_test = train_test_split(
+        X_data, y_data, test_size=0.2, random_state=42
+    )
+
+    # clf = TabPFNClassifier(ignore_pretraining_limits=True)
+    if model == "svc":
+        clf = SVC()
+        print("running svc")
+    elif model == "tabPFN":
+        clf = TabPFNClassifier()
+        print("running tabPFN")
+    elif model == "random_forest":
+        clf = RandomForestClassifier()
+        print("running random_forest")
+    else:
+        raise ValueError(f"Unknown model: {model}")
+
+    clf.fit(X_train, y_train)
+    y_pred = clf.predict(X_test)
+    acc = accuracy_score(y_test, y_pred)
+    # get stderr of accuracy
+    acc_stderr = np.std(y_pred == y_test) / np.sqrt(len(y_pred))
+    print(f"Accuracy: {round(acc, 3)} +/- {round(acc_stderr, 3)}")
+
+    # implement f1_score
+    f1 = f1_score(y_test, y_pred)
+    # get stderr of f1
+    f1_stderr = np.std(f1_score(y_test, y_pred)) / np.sqrt(len(y_pred))
+    print(f"F1 Score: {round(f1, 3)} +/- {round(f1_stderr, 10)}")
+    rprint(f"on case {case}")
+    rprint(f"with model {model}")
+    rprint(f"with subsample {subsample}")
+    rprint(f"with ablations {ablations}")
 
 
-X_train, X_test, y_train, y_test = train_test_split(
-    X_data, y_data, test_size=0.2, random_state=42
-)
-
-model = SVC()
-model.fit(X_train, y_train)
-
-y_pred = model.predict(X_test)
-
-print("Accuracy:", accuracy_score(y_test, y_pred))
-print("F1:", f1_score(y_test, y_pred))
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--model",
+        type=str,
+        default="svc",
+    )
+    parser.add_argument(
+        "--case",
+        type=str,
+        default="MILUV_STATIC_1_UAV",
+        choices=SOURCE_DATA_VALUES,
+    )
+    parser.add_argument(
+        "--subsample",
+        type=float,
+        default=1,
+    )
+    parser.add_argument(
+        "--max_10000_rows",
+        action="store_true",
+    )
+    parser.add_argument(
+        "--ablations",
+        type=str,
+        default="[]",
+    )
+    print("added args")
+    args = parser.parse_args()
+    ablations_list: list = ast.literal_eval(args.ablations)
+    main(
+        args.case,
+        args.model,
+        args.subsample,
+        args.max_10000_rows,
+        ablations_list,
+    )
