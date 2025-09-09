@@ -20,6 +20,7 @@ def main(
     case: Literal["MILUV_STATIC_1_UAV", "MILUV_RANDOM_1_UAV"],
     model: Literal["svc"],
     subsample: float,
+    last_500_cir_cols_only: bool,
     max_10000_rows: bool,
     ablations: list[str],
 ):
@@ -135,6 +136,10 @@ def main(
 
     for i in tqdm.trange(len(df_cir_miluv)):
         cir = np.asarray(eval(df_cir_miluv.iloc[i]["cir"]), dtype=np.float64)
+
+        if last_500_cir_cols_only:
+            cir = cir[-500:]
+
         # get the closest range column value based on timestamp
         timestamp = df_cir_miluv.iloc[i]["timestamp"]
         # make sure df_range from_id and to_id cols match df_cir from_id and to_id cols
@@ -234,6 +239,10 @@ if __name__ == "__main__":
         default=1,
     )
     parser.add_argument(
+        "--last_500_cir_cols_only",
+        action="store_true",
+    )
+    parser.add_argument(
         "--max_10000_rows",
         action="store_true",
     )
@@ -249,6 +258,7 @@ if __name__ == "__main__":
         args.case,
         args.model,
         args.subsample,
+        args.last_500_cir_cols_only,
         args.max_10000_rows,
         ablations_list,
     )
