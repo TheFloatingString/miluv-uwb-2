@@ -144,18 +144,18 @@ def main(
         timestamp = df_cir_miluv.iloc[i]["timestamp"]
         # make sure df_range from_id and to_id cols match df_cir from_id and to_id cols
 
-        df_range_curr = df_range_miluv[
+        # define a new dataframe df_range_curr that is filtered by to_id and from_id
+        tmp_df = df_range_miluv[
             df_range_miluv["to_id"] == df_cir_miluv.iloc[i]["to_id"]
         ]
-        df_range_curr = df_range_curr[
-            df_range_curr["from_id"] == df_cir_miluv.iloc[i]["from_id"]
-        ]
-        range_idx = (df_range_curr["timestamp"] - timestamp).abs().idxmin()
+        tmp_df = tmp_df[tmp_df["from_id"] == df_cir_miluv.iloc[i]["from_id"]]
+
+        range_idx = (tmp_df["timestamp"] - timestamp).abs().idxmin()
         if "ranging_scaling" in ablations:
-            range = df_range_curr.loc[range_idx, "range"]
+            range = tmp_df.loc[range_idx, "range"]
             X_data.append((range**2) * cir)
         elif "distance_scaling" in ablations:
-            range = df_range_curr.loc[range_idx, "gt_range"]
+            range = tmp_df.loc[range_idx, "gt_range"]
             X_data.append((range**2) * cir)
         else:
             X_data.append(cir)
