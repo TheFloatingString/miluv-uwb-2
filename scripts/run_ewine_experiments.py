@@ -132,6 +132,11 @@ def main(
         range_dist = ewine_df.iloc[:, 1].values
         y_data = ewine_df.iloc[:, 0].values
 
+        if "distance_scaling" in ablations:
+            raise ValueError("Distance scaling not implemented for EWINE NLOS set")
+        elif "ranging_scaling" in ablations:
+            X_data *= range_dist[:, None] ** 2
+
     # move all X_data and y_data here
     X_data = np.asarray(X_data)
     y_data = np.asarray(y_data)

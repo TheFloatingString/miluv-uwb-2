@@ -9,6 +9,7 @@ from sklearn.metrics import f1_score
 from miluv_uwb_2.utils import is_nlos_miluv, get_obstacle_type_miluv
 import wandb
 from sklearn.model_selection import train_test_split
+from sklearn.svm import SVC
 
 import warnings
 
@@ -40,14 +41,14 @@ ABLATIONS = [
     {"name": "skew 1 and 2", "features": ["skew1", "skew2"]},
     {
         "name": "skew 1 and 2 and range and bias",
-        "features": ["skew1", "skew2", "range_raw"],
+        "features": ["skew1", "skew2", "range"],
     },
     {
         "name": "skew 1 and 2 and range and bias and tx/rx",
         "features": [
             "skew1",
             "skew2",
-            "range_raw",
+            "range",
             "tx1",
             "tx2",
             "tx3",
@@ -97,6 +98,8 @@ def run_single_ablation(ablation, classifier_choice, train_test_split_type, task
                     clf = RandomForestClassifier()
                 elif classifier_choice == "tabpfn":
                     clf = TabPFNClassifier()
+                elif classifier_choice == "svc":
+                    clf = SVC()
                 else:
                     raise ValueError(f"Unknown classifier choice: {classifier_choice}")
                 clf.fit(X_train, y_train)
@@ -141,6 +144,8 @@ def run_single_ablation(ablation, classifier_choice, train_test_split_type, task
                 clf = RandomForestClassifier()
             elif classifier_choice == "tabpfn":
                 clf = TabPFNClassifier()
+            elif classifier_choice == "svc":
+                clf = SVC()
             else:
                 raise ValueError(f"Unknown classifier choice: {classifier_choice}")
 
