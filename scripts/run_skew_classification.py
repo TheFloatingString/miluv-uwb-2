@@ -1,5 +1,5 @@
 from sklearn.ensemble import RandomForestClassifier
-from tabpfn import TabPFNClassifier
+# from tabpfn import TabPFNClassifier
 from glob import glob
 import pandas as pd
 import numpy as np
@@ -143,6 +143,7 @@ def run_single_ablation(ablation, classifier_choice, train_test_split_type, task
             if classifier_choice == "random_forest":
                 clf = RandomForestClassifier()
             elif classifier_choice == "tabpfn":
+                from tabpfn import TabPFNClassifier
                 clf = TabPFNClassifier()
             elif classifier_choice == "svc":
                 clf = SVC()
