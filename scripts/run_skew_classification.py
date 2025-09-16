@@ -10,6 +10,7 @@ from miluv_uwb_2.utils import is_nlos_miluv, get_obstacle_type_miluv
 import wandb
 from sklearn.model_selection import train_test_split
 from sklearn.svm import SVC
+import tqdm
 
 import warnings
 
@@ -60,7 +61,7 @@ ABLATIONS = [
 ]
 
 
-def run_single_ablation(ablation, classifier_choice, train_test_split_type, task):
+def run_single_ablation(ablation, classifier_choice, train_test_split_type, task, export_as_csv):
     for evals in SAME_TIME_EVALS:
         run = wandb.init(project="miluv-uwb-2-skew-exp", reinit=True)
         list_of_files = []
@@ -72,6 +73,7 @@ def run_single_ablation(ablation, classifier_choice, train_test_split_type, task
             all_y_correct_prds = []
 
             for i in range(3):
+                
                 if i == 0:
                     train_files = list_of_files[:4]
                     test_files = list_of_files[4:]
@@ -81,6 +83,9 @@ def run_single_ablation(ablation, classifier_choice, train_test_split_type, task
                 elif i == 2:
                     train_files = list_of_files[2:]
                     test_files = list_of_files[:2]
+
+                print(train_files)
+                print(test_files)
                 df_train = pd.concat([pd.read_csv(f) for f in train_files])
                 df_test = pd.concat([pd.read_csv(f) for f in test_files])
 
@@ -123,6 +128,8 @@ def run_single_ablation(ablation, classifier_choice, train_test_split_type, task
             rprint(f"F1 Score: {round(f1, 3)} +/- {round(f1_stderr, 3)}")
 
             rprint(f"list of ablations: {ablation['features']}")
+            # rprint(f"dataset shape: {df_miluv.shape}")
+            # rprint(f"NLOS pct: {round(sum(y_data) / len(y_data), 3)}")
             rprint("-" * 20)
 
         elif train_test_split_type == "80-20":
@@ -135,6 +142,12 @@ def run_single_ablation(ablation, classifier_choice, train_test_split_type, task
 
             X_train, X_test, y_train, y_test = train_test_split(
                 df_miluv[ablation["features"]].values,
+                y_data,
+                test_size=0.2,
+                random_state=42,
+            )
+            _, X_test_csv, _, y_test_csv = train_test_split(
+                df_miluv[["range", "gt_range"]].values,
                 y_data,
                 test_size=0.2,
                 random_state=42,
@@ -158,10 +171,31 @@ def run_single_ablation(ablation, classifier_choice, train_test_split_type, task
             f1 = f1_score(y_test, y_pred, average="macro")
             f1_stderr = np.std(y_pred == y_test) / np.sqrt(len(y_pred == y_test))
 
+            if export_as_csv:
+                predicted_los = []
+                predicted_nlos = []
+
+                for i in tqdm.trange(len(y_pred)):
+                    if y_pred[i] == 0:
+                        predicted_los.append(X_test_csv[i])
+                    else:
+                        predicted_nlos.append(X_test_csv[i])
+
+                df = pd.DataFrame(predicted_los, columns=['range', 'gt_range'])
+                df.to_csv(f"data/processed_data/{evals['dataset_name']}_los.csv", index=False)
+
+                df = pd.DataFrame(predicted_nlos, columns=['range', 'gt_range'])
+                df.to_csv(f"data/processed_data/{evals['dataset_name']}_nlos.csv", index=False)
+
+
+
+
             rprint(f"Test case: {evals['dataset_name']}")
             rprint(f"Accuracy: {round(acc, 3)} +/- {round(acc_stderr, 3)}")
             rprint(f"F1 Score: {round(f1, 3)} +/- {round(f1_stderr, 3)}")
             rprint(f"list of ablations: {ablation['features']}")
+            rprint(f"NLOS pct: {round(sum(y_data) / len(y_data), 3)}")
+            rprint(f"dataset shape: {df_miluv.shape}")
             rprint("-" * 20)
 
         wandb.log(
@@ -174,6 +208,7 @@ def run_single_ablation(ablation, classifier_choice, train_test_split_type, task
                 "dataset": evals["dataset_name"],
                 "task": task,
                 "train_test_split_type": train_test_split_type,
+                # 'dataset_shape': df_miluv.shape 
             }
         )
         wandb.finish()
@@ -191,6 +226,10 @@ if __name__ == "__main__":
     parser.add_argument(
         "--task", type=str, default="nlos", choices=["nlos", "obstacle_type"]
     )
+    parser.add_argument(
+        "--export_as_csv",
+        action="store_true",
+    )
     args = parser.parse_args()
 
     for ablation in ABLATIONS:
@@ -199,4 +238,5 @@ if __name__ == "__main__":
             classifier_choice=args.model,
             train_test_split_type=args.train_test_split_type,
             task=args.task,
+            export_as_csv=args.export_as_csv,
         )

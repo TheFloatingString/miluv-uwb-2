@@ -42,17 +42,21 @@ def main(
         miluv_cir_df = pd.read_csv(
             "data/source_data/miluv/cirObstaclesOneTag_1_static_0/ifo001/uwb_cir.csv"
         )
-        miluv_range_df = pd.read_csv(
-            "data/source_data/miluv/cirObstaclesOneTag_1_static_0/ifo001/uwb_range.csv"
-        )
+        print(miluv_cir_df.shape)
+        if ("distance_scaling" in ablations) or ("ranging_scaling" in ablations):
+            miluv_range_df = pd.read_csv(
+                "data/source_data/miluv/cirObstaclesOneTag_1_static_0/ifo001/uwb_range.csv"
+            )
 
-        miluv_df = pd.merge_asof(
-            miluv_cir_df,
-            miluv_range_df[["to_id", "from_id", "range", "gt_range", "timestamp"]],
-            on="timestamp",
-            direction="nearest",
-            by=["to_id", "from_id"],
-        ).dropna()
+            miluv_df = pd.merge_asof(
+                miluv_cir_df,
+                miluv_range_df[["to_id", "from_id", "range", "gt_range", "timestamp"]],
+                on="timestamp",
+                direction="nearest",
+                by=["to_id", "from_id"],
+            ).dropna()
+        else:
+            miluv_df = miluv_cir_df
 
         print(miluv_df.head())
         print(miluv_df.shape)
@@ -83,17 +87,27 @@ def main(
             "data/source_data/miluv/cirObstacles_1_random3_0/ifo001/uwb_cir.csv"
         )
 
-        miluv_range_df = pd.read_csv(
-            "data/source_data/miluv/cirObstacles_1_random3_0/ifo001/uwb_range.csv"
-        )
+        if ("distance_scaling" in ablations) or ("ranging_scaling" in ablations):
+            miluv_range_df = pd.read_csv(
+                "data/source_data/miluv/cirObstacles_1_random3_0/ifo001/uwb_range.csv"
+            )
+            miluv_df = pd.merge_asof(
+                miluv_cir_df,
+                miluv_range_df[["to_id", "from_id", "range", "gt_range", "timestamp"]],
+                on="timestamp",
+                direction="nearest",
+                by=["to_id", "from_id"],
+            ).dropna()
+        else:
+            miluv_df = miluv_cir_df
 
-        miluv_df = pd.merge_asof(
-            miluv_cir_df,
-            miluv_range_df[["to_id", "from_id", "range", "gt_range", "timestamp"]],
-            on="timestamp",
-            direction="nearest",
-            by=["to_id", "from_id"],
-        ).dropna()
+        print(miluv_df.head())
+        print(miluv_df.shape)
+
+        if max_10000_rows:
+            miluv_df = miluv_df.sample(n=10000, random_state=42)
+        elif 0 < subsample < 1:
+            miluv_df = miluv_df.sample(frac=subsample, random_state=42)
 
         print(miluv_df.head())
         print(miluv_df.shape)
@@ -138,31 +152,36 @@ def main(
             "data/source_data/miluv/cirObstacles_3_random_0/ifo003/uwb_range.csv"
         )
 
-        miluv_df1 = pd.merge_asof(
-            miluv_cir_df1,
-            miluv_range_df1[["to_id", "from_id", "range", "gt_range", "timestamp"]],
-            on="timestamp",
-            direction="nearest",
-            by=["to_id", "from_id"],
-        )
 
-        miluv_df2 = pd.merge_asof(
-            miluv_cir_df2,
-            miluv_range_df2[["to_id", "from_id", "range", "gt_range", "timestamp"]],
-            on="timestamp",
-            direction="nearest",
-            by=["to_id", "from_id"],
-        )
+        if ("distance_scaling" in ablations) or ("ranging_scaling" in ablations):
+            miluv_df1 = pd.merge_asof(
+                miluv_cir_df1,
+                miluv_range_df1[["to_id", "from_id", "range", "gt_range", "timestamp"]],
+                on="timestamp",
+                direction="nearest",
+                by=["to_id", "from_id"],
+            )
 
-        miluv_df3 = pd.merge_asof(
-            miluv_cir_df3,
-            miluv_range_df3[["to_id", "from_id", "range", "gt_range", "timestamp"]],
-            on="timestamp",
-            direction="nearest",
-            by=["to_id", "from_id"],
-        )
+            miluv_df2 = pd.merge_asof(
+                miluv_cir_df2,
+                miluv_range_df2[["to_id", "from_id", "range", "gt_range", "timestamp"]],
+                on="timestamp",
+                direction="nearest",
+                by=["to_id", "from_id"],
+            )
 
-        miluv_df = pd.concat([miluv_df1, miluv_df2, miluv_df3]).dropna()
+            miluv_df3 = pd.merge_asof(
+                miluv_cir_df3,
+                miluv_range_df3[["to_id", "from_id", "range", "gt_range", "timestamp"]],
+                on="timestamp",
+                direction="nearest",
+                by=["to_id", "from_id"],
+            )
+
+            miluv_df = pd.concat([miluv_df1, miluv_df2, miluv_df3]).dropna()
+        
+        else:
+            miluv_df = pd.concat([miluv_cir_df1, miluv_cir_df2, miluv_cir_df3]).dropna()
 
         print(miluv_df.head())
         print(miluv_df.shape)
@@ -245,6 +264,9 @@ def main(
     X_test = np.array(X_test)
     y_train = np.array(y_train)
     y_test = np.array(y_test)
+
+    print(f"X_data shape: {X_data.shape}")
+    print(f"nlos pct: {sum(y_data) / len(y_data)}")
 
     wandb.log(
         {
