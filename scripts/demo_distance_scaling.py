@@ -4,12 +4,12 @@ import argparse
 import pandas as pd
 from sklearn.svm import SVC
 from sklearn.ensemble import RandomForestClassifier
-from tabpfn import TabPFNClassifier
 import tqdm
 import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, f1_score
 from rich import print as rprint
+import glob 
 
 np.random.seed(42)
 
@@ -123,167 +123,19 @@ def main(
 
     elif case == "MILUV_RANDOM_3_UAV":
         prefix = "random"
-        # ifo001
-        df_cir_0 = pd.read_csv(
-            f"data/processed_data/miluv-{prefix}_3-ifo001-uwb_cir_0.csv"
-        )
-        df_cir_1 = pd.read_csv(
-            f"data/processed_data/miluv-{prefix}_3-ifo001-uwb_cir_1.csv"
-        )
-        df_cir_2 = pd.read_csv(
-            f"data/processed_data/miluv-{prefix}_3-ifo001-uwb_cir_2.csv"
-        )
-        df_cir_3 = pd.read_csv(
-            f"data/processed_data/miluv-{prefix}_3-ifo001-uwb_cir_3.csv"
-        )
-        df_cir_4 = pd.read_csv(
-            f"data/processed_data/miluv-{prefix}_3-ifo001-uwb_cir_4.csv"
-        )
-        df_cir_5 = pd.read_csv(
-            f"data/processed_data/miluv-{prefix}_3-ifo001-uwb_cir_5.csv"
-        )
 
-        df_range_0 = pd.read_csv(
-            f"data/processed_data/miluv-{prefix}_3-ifo001-uwb_range_0.csv"
-        )
-        df_range_1 = pd.read_csv(
-            f"data/processed_data/miluv-{prefix}_3-ifo001-uwb_range_1.csv"
-        )
-        df_range_2 = pd.read_csv(
-            f"data/processed_data/miluv-{prefix}_3-ifo001-uwb_range_2.csv"
-        )
-        df_range_3 = pd.read_csv(
-            f"data/processed_data/miluv-{prefix}_3-ifo001-uwb_range_3.csv"
-        )
-        df_range_4 = pd.read_csv(
-            f"data/processed_data/miluv-{prefix}_3-ifo001-uwb_range_4.csv"
-        )
-        df_range_5 = pd.read_csv(
-            f"data/processed_data/miluv-{prefix}_3-ifo001-uwb_range_5.csv"
-        )
+        list_of_cir_filepaths = glob.glob(f"data/processed_data/miluv-{prefix}_3-ifo00*-uwb_cir_*.csv")
+        list_of_cir_dfs = [pd.read_csv(filepath) for filepath in list_of_cir_filepaths]
 
-        # ifo002
-        df_cir_0_ifo002 = pd.read_csv(
-            f"data/processed_data/miluv-{prefix}_3-ifo002-uwb_cir_0.csv"
-        )
-        df_cir_1_ifo002 = pd.read_csv(
-            f"data/processed_data/miluv-{prefix}_3-ifo002-uwb_cir_1.csv"
-        )
-        df_cir_2_ifo002 = pd.read_csv(
-            f"data/processed_data/miluv-{prefix}_3-ifo002-uwb_cir_2.csv"
-        )
-        df_cir_3_ifo002 = pd.read_csv(
-            f"data/processed_data/miluv-{prefix}_3-ifo002-uwb_cir_3.csv"
-        )
-        df_cir_4_ifo002 = pd.read_csv(
-            f"data/processed_data/miluv-{prefix}_3-ifo002-uwb_cir_4.csv"
-        )
-        df_cir_5_ifo002 = pd.read_csv(
-            f"data/processed_data/miluv-{prefix}_3-ifo002-uwb_cir_5.csv"
-        )
+        list_of_ranging_filepaths = glob.glob(f"data/processed_data/miluv-{prefix}_3-ifo00*-uwb_range_*.csv")
+        list_of_ranging_dfs = [pd.read_csv(filepath) for filepath in list_of_ranging_filepaths]
 
-        df_range_0_ifo002 = pd.read_csv(
-            f"data/processed_data/miluv-{prefix}_3-ifo002-uwb_range_0.csv"
-        )
-        df_range_1_ifo002 = pd.read_csv(
-            f"data/processed_data/miluv-{prefix}_3-ifo002-uwb_range_1.csv"
-        )
-        df_range_2_ifo002 = pd.read_csv(
-            f"data/processed_data/miluv-{prefix}_3-ifo002-uwb_range_2.csv"
-        )
-        df_range_3_ifo002 = pd.read_csv(
-            f"data/processed_data/miluv-{prefix}_3-ifo002-uwb_range_3.csv"
-        )
-        df_range_4_ifo002 = pd.read_csv(
-            f"data/processed_data/miluv-{prefix}_3-ifo002-uwb_range_4.csv"
-        )
-        df_range_5_ifo002 = pd.read_csv(
-            f"data/processed_data/miluv-{prefix}_3-ifo002-uwb_range_5.csv"
-        )
 
-        # ifo003
-        df_cir_0_ifo003 = pd.read_csv(
-            f"data/processed_data/miluv-{prefix}_3-ifo003-uwb_cir_0.csv"
-        )
-        df_cir_1_ifo003 = pd.read_csv(
-            f"data/processed_data/miluv-{prefix}_3-ifo003-uwb_cir_1.csv"
-        )
-        df_cir_2_ifo003 = pd.read_csv(
-            f"data/processed_data/miluv-{prefix}_3-ifo003-uwb_cir_2.csv"
-        )
-        df_cir_3_ifo003 = pd.read_csv(
-            f"data/processed_data/miluv-{prefix}_3-ifo003-uwb_cir_3.csv"
-        )
-        df_cir_4_ifo003 = pd.read_csv(
-            f"data/processed_data/miluv-{prefix}_3-ifo003-uwb_cir_4.csv"
-        )
-        df_cir_5_ifo003 = pd.read_csv(
-            f"data/processed_data/miluv-{prefix}_3-ifo003-uwb_cir_5.csv"
-        )
+        df_cir_miluv = pd.concat(list_of_cir_dfs)
+        df_range_miluv = pd.concat(list_of_ranging_dfs)
 
-        df_range_0_ifo003 = pd.read_csv(
-            f"data/processed_data/miluv-{prefix}_3-ifo003-uwb_range_0.csv"
-        )
-        df_range_1_ifo003 = pd.read_csv(
-            f"data/processed_data/miluv-{prefix}_3-ifo003-uwb_range_1.csv"
-        )
-        df_range_2_ifo003 = pd.read_csv(
-            f"data/processed_data/miluv-{prefix}_3-ifo003-uwb_range_2.csv"
-        )
-        df_range_3_ifo003 = pd.read_csv(
-            f"data/processed_data/miluv-{prefix}_3-ifo003-uwb_range_3.csv"
-        )
-        df_range_4_ifo003 = pd.read_csv(
-            f"data/processed_data/miluv-{prefix}_3-ifo003-uwb_range_4.csv"
-        )
-        df_range_5_ifo003 = pd.read_csv(
-            f"data/processed_data/miluv-{prefix}_3-ifo003-uwb_range_5.csv"
-        )
-
-        df_cir_miluv = pd.concat(
-            [
-                df_cir_0,
-                df_cir_1,
-                df_cir_2,
-                df_cir_3,
-                df_cir_4,
-                df_cir_5,
-                df_cir_0_ifo002,
-                df_cir_1_ifo002,
-                df_cir_2_ifo002,
-                df_cir_3_ifo002,
-                df_cir_4_ifo002,
-                df_cir_5_ifo002,
-                df_cir_0_ifo003,
-                df_cir_1_ifo003,
-                df_cir_2_ifo003,
-                df_cir_3_ifo003,
-                df_cir_4_ifo003,
-                df_cir_5_ifo003,
-            ]
-        )
-        df_range_miluv = pd.concat(
-            [
-                df_range_0,
-                df_range_1,
-                df_range_2,
-                df_range_3,
-                df_range_4,
-                df_range_5,
-                df_range_0_ifo002,
-                df_range_1_ifo002,
-                df_range_2_ifo002,
-                df_range_3_ifo002,
-                df_range_4_ifo002,
-                df_range_5_ifo002,
-                df_range_0_ifo003,
-                df_range_1_ifo003,
-                df_range_2_ifo003,
-                df_range_3_ifo003,
-                df_range_4_ifo003,
-                df_range_5_ifo003,
-            ]
-        )
+        print(f"df_cir_miluv shape: {df_cir_miluv.shape}")
+        print(f"df_range_miluv shape: {df_range_miluv.shape}")
 
     def is_nlos_miluv(tag_id):
         if tag_id in [1, 3, 4]:
@@ -317,9 +169,19 @@ def main(
         range_idx = (tmp_df["timestamp"] - timestamp).abs().idxmin()
         if "ranging_scaling" in ablations:
             range = tmp_df.loc[range_idx, "range"]
+            if len(range.shape) > 0:
+                range = range.values[0]
             X_data.append((range**2) * cir)
         elif "distance_scaling" in ablations:
             range = tmp_df.loc[range_idx, "gt_range"]
+            # print(range.shape)
+            # print(len(range.shape))
+            if len(range.shape) > 0:
+                range = range.values[0]
+                # print(range)
+            # range = range[0]
+            # print(tmp_df.loc[range_idx])
+            # print(f"range:  {range}")
             X_data.append((range**2) * cir)
         else:
             X_data.append(cir)
@@ -358,6 +220,8 @@ def main(
         clf = SVC()
         print("running svc")
     elif model == "tabpfn":
+        from tabpfn import TabPFNClassifier
+
         clf = TabPFNClassifier()
         print("running tabPFN")
     elif model == "random_forest":
@@ -382,6 +246,9 @@ def main(
     rprint(f"with model {model}")
     rprint(f"with subsample {subsample}")
     rprint(f"with ablations {ablations}")
+
+    rprint(f"X_data.shape: {X_data.shape}")
+    rprint(f"NLOS pct: {round(sum(y_data) / len(y_data), 3)}")
 
 
 if __name__ == "__main__":
