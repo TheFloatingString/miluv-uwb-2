@@ -50,7 +50,9 @@ MILUV_UWB_RANGE_FILES = [
 for file_dict in MILUV_UWB_CIR_FILES:
     df = pd.read_csv(file_dict["filepath"])
     print(df.head())
+    print(df.shape)
     for to_id in df.to_id.unique():
+        print(to_id)
         df[df.to_id == to_id].to_csv(
             f"data/processed_data/{file_dict['name']}_{to_id}.csv", index=False
         )
