@@ -72,6 +72,7 @@ def main(
         for file in LIST_OF_PANDAS_LOCALIZATION_SET:
             ewine_df = pd.read_csv(file, header=None)
             print(ewine_df.head())
+            rprint(ewine_df.shape)
             list_of_pd_dfs.append(ewine_df)
 
         ewine_df = pd.concat(list_of_pd_dfs)
@@ -104,6 +105,7 @@ def main(
         print(y_data.head())
         print(y_data.unique())
         print(y_data.value_counts())
+        print(f'NLOS pct: {y_data.value_counts()[1] / len(y_data)}')
 
     elif source_data == "EWINE_NLOS_SET":
         list_of_pd_dfs = []
@@ -113,6 +115,8 @@ def main(
             list_of_pd_dfs.append(curr_ewine_df)
 
         ewine_df = pd.concat(list_of_pd_dfs)
+        rprint(ewine_df.head())
+        rprint(ewine_df.shape)
 
         # subsample
         if max_10000_rows:
@@ -131,6 +135,10 @@ def main(
 
         range_dist = ewine_df.iloc[:, 1].values
         y_data = ewine_df.iloc[:, 0].values
+
+        print(f"X_data shape: {X_data.shape}")
+        print(f"y_data shape: {y_data.shape}")
+        print(f'NLOS pct: {sum(y_data) / len(y_data)}')
 
         if "distance_scaling" in ablations:
             raise ValueError("Distance scaling not implemented for EWINE NLOS set")
@@ -188,6 +196,8 @@ def main(
     X_test = np.array(X_test)
     y_train = np.array(y_train)
     y_test = np.array(y_test)
+
+    rprint(f"data shape: {X_data.shape}")
 
     wandb.log(
         {
