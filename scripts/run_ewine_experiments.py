@@ -105,7 +105,7 @@ def main(
         print(y_data.head())
         print(y_data.unique())
         print(y_data.value_counts())
-        print(f'NLOS pct: {y_data.value_counts()[1] / len(y_data)}')
+        print(f"NLOS pct: {y_data.value_counts()[1] / len(y_data)}")
 
     elif source_data == "EWINE_NLOS_SET":
         list_of_pd_dfs = []
@@ -138,7 +138,7 @@ def main(
 
         print(f"X_data shape: {X_data.shape}")
         print(f"y_data shape: {y_data.shape}")
-        print(f'NLOS pct: {sum(y_data) / len(y_data)}')
+        print(f"NLOS pct: {sum(y_data) / len(y_data)}")
 
         if "distance_scaling" in ablations:
             raise ValueError("Distance scaling not implemented for EWINE NLOS set")

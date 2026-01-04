@@ -152,7 +152,6 @@ def main(
             "data/source_data/miluv/cirObstacles_3_random_0/ifo003/uwb_range.csv"
         )
 
-
         if ("distance_scaling" in ablations) or ("ranging_scaling" in ablations):
             miluv_df1 = pd.merge_asof(
                 miluv_cir_df1,
@@ -179,7 +178,7 @@ def main(
             )
 
             miluv_df = pd.concat([miluv_df1, miluv_df2, miluv_df3]).dropna()
-        
+
         else:
             miluv_df = pd.concat([miluv_cir_df1, miluv_cir_df2, miluv_cir_df3]).dropna()
 

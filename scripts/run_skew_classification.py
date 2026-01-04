@@ -1,4 +1,5 @@
 from sklearn.ensemble import RandomForestClassifier
+
 # from tabpfn import TabPFNClassifier
 from glob import glob
 import pandas as pd
@@ -61,7 +62,9 @@ ABLATIONS = [
 ]
 
 
-def run_single_ablation(ablation, classifier_choice, train_test_split_type, task, export_as_csv):
+def run_single_ablation(
+    ablation, classifier_choice, train_test_split_type, task, export_as_csv
+):
     for evals in SAME_TIME_EVALS:
         run = wandb.init(project="miluv-uwb-2-skew-exp", reinit=True)
         list_of_files = []
@@ -73,7 +76,6 @@ def run_single_ablation(ablation, classifier_choice, train_test_split_type, task
             all_y_correct_prds = []
 
             for i in range(3):
-                
                 if i == 0:
                     train_files = list_of_files[:4]
                     test_files = list_of_files[4:]
@@ -157,6 +159,7 @@ def run_single_ablation(ablation, classifier_choice, train_test_split_type, task
                 clf = RandomForestClassifier()
             elif classifier_choice == "tabpfn":
                 from tabpfn import TabPFNClassifier
+
                 clf = TabPFNClassifier()
             elif classifier_choice == "svc":
                 clf = SVC()
@@ -181,14 +184,15 @@ def run_single_ablation(ablation, classifier_choice, train_test_split_type, task
                     else:
                         predicted_nlos.append(X_test_csv[i])
 
-                df = pd.DataFrame(predicted_los, columns=['range', 'gt_range'])
-                df.to_csv(f"data/processed_data/{evals['dataset_name']}_los.csv", index=False)
+                df = pd.DataFrame(predicted_los, columns=["range", "gt_range"])
+                df.to_csv(
+                    f"data/processed_data/{evals['dataset_name']}_los.csv", index=False
+                )
 
-                df = pd.DataFrame(predicted_nlos, columns=['range', 'gt_range'])
-                df.to_csv(f"data/processed_data/{evals['dataset_name']}_nlos.csv", index=False)
-
-
-
+                df = pd.DataFrame(predicted_nlos, columns=["range", "gt_range"])
+                df.to_csv(
+                    f"data/processed_data/{evals['dataset_name']}_nlos.csv", index=False
+                )
 
             rprint(f"Test case: {evals['dataset_name']}")
             rprint(f"Accuracy: {round(acc, 3)} +/- {round(acc_stderr, 3)}")
@@ -208,7 +212,7 @@ def run_single_ablation(ablation, classifier_choice, train_test_split_type, task
                 "dataset": evals["dataset_name"],
                 "task": task,
                 "train_test_split_type": train_test_split_type,
-                # 'dataset_shape': df_miluv.shape 
+                # 'dataset_shape': df_miluv.shape
             }
         )
         wandb.finish()
