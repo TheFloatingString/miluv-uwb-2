@@ -11,3 +11,6 @@ wandb
 
 # Virtual environments
 .venv
+
+# .env files
+*.env
