@@ -9,7 +9,7 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, f1_score
 from rich import print as rprint
-import glob 
+import glob
 
 np.random.seed(42)
 
@@ -124,12 +124,17 @@ def main(
     elif case == "MILUV_RANDOM_3_UAV":
         prefix = "random"
 
-        list_of_cir_filepaths = glob.glob(f"data/processed_data/miluv-{prefix}_3-ifo00*-uwb_cir_*.csv")
+        list_of_cir_filepaths = glob.glob(
+            f"data/processed_data/miluv-{prefix}_3-ifo00*-uwb_cir_*.csv"
+        )
         list_of_cir_dfs = [pd.read_csv(filepath) for filepath in list_of_cir_filepaths]
 
-        list_of_ranging_filepaths = glob.glob(f"data/processed_data/miluv-{prefix}_3-ifo00*-uwb_range_*.csv")
-        list_of_ranging_dfs = [pd.read_csv(filepath) for filepath in list_of_ranging_filepaths]
-
+        list_of_ranging_filepaths = glob.glob(
+            f"data/processed_data/miluv-{prefix}_3-ifo00*-uwb_range_*.csv"
+        )
+        list_of_ranging_dfs = [
+            pd.read_csv(filepath) for filepath in list_of_ranging_filepaths
+        ]
 
         df_cir_miluv = pd.concat(list_of_cir_dfs)
         df_range_miluv = pd.concat(list_of_ranging_dfs)
