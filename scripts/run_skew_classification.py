@@ -1,6 +1,7 @@
 from sklearn.ensemble import RandomForestClassifier
 
-# from tabpfn import TabPFNClassifier
+import time
+from tabpfn import TabPFNClassifier
 from glob import glob
 import pandas as pd
 import numpy as np
@@ -22,29 +23,52 @@ wandb.login()
 # warnings.filterwarnings("ignore")
 
 
+LAB_UWB_RANGE_FILES = [
+    {
+        "name": "lab-los_all",
+        "filepath": "data/source_data/lab/calibrated_uwb_los_all.csv",
+    },
+    {
+        "name": "lab-nlos_0_1_4",
+        "filepath": "data/source_data/lab/calibrated_uwb_nlos_0_1_4.csv",
+    },
+    {
+        "name": "lab-nlos_2_3_11",
+        "filepath": "data/source_data/lab/calibrated_uwb_nlos_2_3_11.csv",
+    },
+    {
+        "name": "lab-nlos_3_5_11",
+        "filepath": "data/source_data/lab/calibrated_uwb_nlos_3_5_11.csv",
+    },
+    {
+        "name": "lab-nlos_all_nonsevere",
+        "filepath": "data/source_data/lab/calibrated_uwb_nlos_all_nonsevere.csv",
+    },
+]
+
 SAME_TIME_EVALS = [
     {"dataset_name": "random-1", "files": ["miluv-random_1-ifo001-uwb_range"]},
-    {"dataset_name": "static-1", "files": ["miluv-static_1-ifo001-uwb_range"]},
-    {
-        "dataset_name": "random-3",
-        "files": [
-            "miluv-random_3-ifo001-uwb_range",
-            "miluv-random_3-ifo002-uwb_range",
-            "miluv-random_3-ifo003-uwb_range",
-        ],
-    },
+    # {"dataset_name": "static-1", "files": ["miluv-static_1-ifo001-uwb_range"]},
+    # {
+    #     "dataset_name": "random-3",
+    #     "files": [
+    #         "miluv-random_3-ifo001-uwb_range",
+    #         "miluv-random_3-ifo002-uwb_range",
+    #         "miluv-random_3-ifo003-uwb_range",
+    #     ],
+    # },
 ]
 
 
 ABLATIONS = [
-    {"name": "fpp1 baseline", "features": ["fpp1"]},
-    {"name": "skew 1 only", "features": ["skew1"]},
-    {"name": "skew 2 only", "features": ["skew2"]},
-    {"name": "skew 1 and 2", "features": ["skew1", "skew2"]},
-    {
-        "name": "skew 1 and 2 and range and bias",
-        "features": ["skew1", "skew2", "range"],
-    },
+    # {"name": "fpp1 baseline", "features": ["fpp1"]},
+    # {"name": "skew 1 only", "features": ["skew1"]},
+    # {"name": "skew 2 only", "features": ["skew2"]},
+    # {"name": "skew 1 and 2", "features": ["skew1", "skew2"]},
+    # {
+    #     "name": "skew 1 and 2 and range and bias",
+    #     "features": ["skew1", "skew2", "range"],
+    # },
     {
         "name": "skew 1 and 2 and range and bias and tx/rx",
         "features": [
@@ -104,14 +128,22 @@ def run_single_ablation(
                 if classifier_choice == "random_forest":
                     clf = RandomForestClassifier()
                 elif classifier_choice == "tabpfn":
-                    clf = TabPFNClassifier()
+                    from tabpfn import TabPFNClassifier
+
+                    clf = TabPFNClassifier(fit_mode="fit_with_cache")
                 elif classifier_choice == "svc":
                     clf = SVC()
                 else:
                     raise ValueError(f"Unknown classifier choice: {classifier_choice}")
                 clf.fit(X_train, y_train)
 
-                y_pred = clf.predict(X_test)
+                print(clf)
+                start = time.time()
+                y_pred = clf.predict(np.asarray([X_test[0]]))
+                end = time.time()
+
+                print(f"time elapsed: {end - start}")
+                print(len(X_test))
                 correct_prds = y_pred == y_test
 
                 all_y_tests.extend(y_test)
@@ -137,6 +169,9 @@ def run_single_ablation(
         elif train_test_split_type == "80-20":
             df_miluv = pd.concat([pd.read_csv(f) for f in list_of_files])
 
+            print(df_miluv.head())
+            print(list_of_files)
+
             if task == "nlos":
                 y_data = df_miluv["to_id"].apply(is_nlos_miluv).values
             elif task == "obstacle_type":
@@ -154,20 +189,48 @@ def run_single_ablation(
                 test_size=0.2,
                 random_state=42,
             )
+            X_train_idx, X_test_idx, y_train_idx, y_test_idx = train_test_split(
+                np.arange(len(df_miluv)),
+                y_data,
+                test_size=0.2,
+                random_state=42,
+            )
 
             if classifier_choice == "random_forest":
                 clf = RandomForestClassifier()
             elif classifier_choice == "tabpfn":
                 from tabpfn import TabPFNClassifier
 
-                clf = TabPFNClassifier()
+                clf = TabPFNClassifier(fit_mode="fit_with_cache")
             elif classifier_choice == "svc":
                 clf = SVC()
             else:
                 raise ValueError(f"Unknown classifier choice: {classifier_choice}")
 
             clf.fit(X_train, y_train)
-            y_pred = clf.predict(X_test)
+            start = time.time()
+            y_pred = clf.predict(np.asarray([X_test[0]]))
+            end = time.time()
+            print(f"time elapsed: {start - end}")
+            print(len(X_test))
+
+            los_only_list = []
+
+            for idx, pred in zip(X_test_idx, y_pred):
+                print(idx, pred)
+                if pred == 0:
+                    los_only_list.append(df_miluv.iloc[idx])
+
+            # export los_only_list to csv
+            df = pd.DataFrame(los_only_list)
+            df.to_csv(f"{evals['dataset_name']}_los_only.csv", index=False)
+
+            # export all test idx
+            only_test_list = []
+            for idx in X_test_idx:
+                only_test_list.append(df_miluv.iloc[idx])
+            df = pd.DataFrame(only_test_list)
+            df.to_csv(f"{evals['dataset_name']}_test_idx.csv", index=False)
 
             acc = np.mean(y_pred == y_test)
             acc_stderr = np.std(y_pred == y_test) / np.sqrt(len(y_pred == y_test))

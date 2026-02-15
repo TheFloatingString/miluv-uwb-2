@@ -29,12 +29,13 @@ def run_experiment(dataset_name: str, features: list[str]):
             "data/source_data/miluv/cirObstaclesOneTag_1_static_0/ifo001/uwb_passive.csv"
         )
 
-
-    elif dataset_name=="cirObstacles_3_random_0":
+    elif dataset_name == "cirObstacles_3_random_0":
         # read ifo001 to ifo003
         dfs = []
         for i in range(1, 4):
-            df_temp = pd.read_csv(f"data/source_data/miluv/cirObstacles_3_random_0/ifo00{i}/uwb_passive.csv")
+            df_temp = pd.read_csv(
+                f"data/source_data/miluv/cirObstacles_3_random_0/ifo00{i}/uwb_passive.csv"
+            )
             dfs.append(df_temp)
         df = pd.concat(dfs, ignore_index=True)
 
@@ -70,7 +71,7 @@ def run_experiment(dataset_name: str, features: list[str]):
     print(f"Test set NLoS ratio: {np.mean(y_test):.3f}")
 
     # Train a simple classifier
-    clf = TabPFNClassifier(device='cpu')
+    clf = TabPFNClassifier(device="cpu")
     clf.fit(X_train, y_train)
 
     train_acc_score = clf.score(X_train, y_train)
@@ -92,7 +93,7 @@ if __name__ == "__main__":
     parser.add_argument("--skew1", action="store_true", help="Use skew1 feature")
     parser.add_argument("--skew2", action="store_true", help="Use skew2 feature")
     parser.add_argument("--skew3", action="store_true", help="Use skew3 feature")
-    
+
     args = parser.parse_args()
 
     # Build feature list based on flags
@@ -103,10 +104,10 @@ if __name__ == "__main__":
         features.append("skew2")
     if args.skew3:
         features.append("skew3")
-    
+
     if not features:
         features = ["skew1", "skew2", "skew3"]  # default to all if none specified
-    
+
     print(f"Using features: {features}")
-    
+
     run_experiment(args.dataset_name, features)
