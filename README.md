@@ -2,6 +2,26 @@
 
 The following repository contains the datasets and code used to run the NLOS detection and obstacle identification experiments.
 
+# May 2026 Update 
+
+- Added Husky data
+- With MILUV data
+- tx/rx diffs 
+
+```bash
+pip install uv 
+uv sync
+uv run ./src/dataloader.py
+```
+
+## TODO
+
+- [ ] wandb logging
+- [ ] ablation pipeline
+- [ ] cross env eval
+
+# September 2025 Update
+
 ## Quickstart
 
 ```bash
